@@ -1,0 +1,14 @@
+# Сборка
+target/
+*.jar
+
+# IDE
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+
+# Логи и временные файлы
+*.log
+dependency-reduced-pom.xml

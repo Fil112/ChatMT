@@ -1,0 +1,22 @@
+name: ChatMT
+version: 1.0
+main: me.chatmt.ChatMT
+api-version: 1.16
+author: ChatMTDev
+softdepend: [PlaceholderAPI, LuckPerms, Vault]
+commands:
+  chatmt:
+    description: Main command
+  mtkick:
+    description: Kick player
+  mtban:
+    description: Ban player
+  mtmute:
+    description: Mute/Unmute player
+permissions:
+  chatmt.admin:
+    default: op
+  chatmt.staff:
+    default: op
+  chatmt.color:
+    default: op
