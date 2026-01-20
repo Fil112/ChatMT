@@ -1,10 +1,13 @@
-no-permission: "&cError: You do not have permission!"
-reload-success: "&a[ChatMT] Configuration and locales reloaded successfully!"
-usage: "&eUsage: &f/chatmt reload"
-command-blocked: "&cAccess denied for this command!"
-mute-message: "&cYou cannot talk while you are muted!"
-muted: "&aYou have muted &e%player%&a."
-unmuted: "&eYou have unmuted &a%player%&e."
-punish-usage: "&cUsage: /%cmd% <player> [reason]"
-default-reason: "Violation of rules"
-action-executed: "&aAction performed successfully!"
+# System Messages
+no-permission: "&#FF5555[!] &7You don't have permission to execute this command."
+reload-success: "&#55FF55[!] &7ChatMT configuration successfully reloaded!"
+command-blocked: "&#FF5555[!] &7This command is blocked by server settings."
+
+# Moderation Messages
+mute-message: "&#FF5555[!] &7You cannot chat because you are muted."
+spam-cooldown: "&#FFBB00[!] &7Please wait before sending another message."
+chat-cleared: "&#55FF55[Chat] &fThe chat has been cleared by an administrator."
+
+# Commands
+player-not-found: "&#FF5555[!] &7Player not found."
+usage-mute: "&7Usage: &f/mtmute <player>"

@@ -4,80 +4,62 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
 public class ChatCommand implements CommandExecutor {
-    private final ChatMT plugin;
-
-    public ChatCommand(ChatMT plugin) {
-        this.plugin = plugin;
-    }
+    private final ChatMT plugin = ChatMT.getInstance();
 
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
 
-        // Команда управления плагином (/chatmt reload)
+        // Команда перезагрузки
         if (label.equalsIgnoreCase("chatmt")) {
-            if (args.length > 0 && args[0].equalsIgnoreCase("reload")) {
-                if (!sender.hasPermission("chatmt.admin")) {
-                    sender.sendMessage(plugin.getLangMsg("no-permission"));
-                    return true;
-                }
-                plugin.reloadConfig();
-                plugin.loadLang();
-                plugin.loadData();
-                plugin.startAutoMessages();
-                sender.sendMessage(plugin.getLangMsg("reload-success"));
-                return true;
-            }
-            sender.sendMessage(plugin.getLangMsg("usage"));
-            return true;
-        }
-
-        // Команды наказаний (Kick, Ban, Mute)
-        if (label.equalsIgnoreCase("mtkick") || label.equalsIgnoreCase("mtban") || label.equalsIgnoreCase("mtmute")) {
-            if (!sender.hasPermission("chatmt.staff")) {
+            if (!sender.hasPermission("chatmt.admin")) {
                 sender.sendMessage(plugin.getLangMsg("no-permission"));
                 return true;
             }
-
-            if (args.length < 1) {
-                sender.sendMessage(plugin.getLangMsg("punish-usage").replace("%cmd%", label));
-                return true;
-            }
-
-            String targetName = args[0];
-
-            // Логика МУТА с сохранением в data.yml
-            if (label.equalsIgnoreCase("mtmute")) {
-                if (plugin.getMutedPlayers().contains(targetName)) {
-                    plugin.getMutedPlayers().remove(targetName);
-                    sender.sendMessage(plugin.getLangMsg("unmuted").replace("%player%", targetName));
-                } else {
-                    plugin.getMutedPlayers().add(targetName);
-                    sender.sendMessage(plugin.getLangMsg("muted").replace("%player%", targetName));
-                }
-                plugin.saveData(); // Сохраняем изменения в файл
-                return true;
-            }
-
-            // Логика БАНА и КИКА
-            StringBuilder reasonBuilder = new StringBuilder();
-            for (int i = 1; i < args.length; i++) {
-                reasonBuilder.append(args[i]).append(" ");
-            }
-
-            String reason = reasonBuilder.toString().trim();
-            if (reason.isEmpty()) {
-                reason = plugin.getLangMsg("default-reason");
-            }
-
-            String vanillaCmd = label.replace("mt", "");
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), vanillaCmd + " " + targetName + " " + reason);
-
-            sender.sendMessage(plugin.getLangMsg("action-executed"));
+            plugin.reloadConfig();
+            sender.sendMessage(plugin.getLangMsg("reload-success"));
             return true;
         }
 
-        return false;
+        // Команды модерации
+        if (!sender.hasPermission("chatmt.staff")) {
+            sender.sendMessage(plugin.getLangMsg("no-permission"));
+            return true;
+        }
+
+        if (args.length < 1) return false;
+        String targetName = args[0];
+
+        if (label.equalsIgnoreCase("mtmute")) {
+            if (plugin.getMutedPlayers().contains(targetName)) {
+                plugin.getMutedPlayers().remove(targetName);
+                sender.sendMessage("§aИгрок " + targetName + " размучен.");
+            } else {
+                plugin.getMutedPlayers().add(targetName);
+                sender.sendMessage("§cИгрок " + targetName + " замучен.");
+            }
+            return true;
+        }
+
+        if (label.equalsIgnoreCase("mtkick")) {
+            Player target = Bukkit.getPlayer(targetName);
+            if (target != null) {
+                target.kickPlayer(plugin.translateHexColorCodes(args.length > 1 ? args[1] : "Kicked by Staff"));
+                sender.sendMessage("§aИгрок кикнут.");
+            }
+            return true;
+        }
+
+        if (label.equalsIgnoreCase("mtban")) {
+            Bukkit.getBanList(org.bukkit.BanList.Type.NAME).addBan(targetName, "Banned by Staff", null, null);
+            Player target = Bukkit.getPlayer(targetName);
+            if (target != null) target.kickPlayer("Banned");
+            sender.sendMessage("§aИгрок забанен.");
+            return true;
+        }
+
+        return true;
     }
 }

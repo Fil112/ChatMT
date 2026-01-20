@@ -1,16 +1,19 @@
-# 📚 ChatMT Wiki
+# ChatMT Wiki
+### Description
+ChatMT is an all-in-one chat management solution for Minecraft servers (1.16.5+).
 
-## ⚙️ Modules
-Toggle features in config.yml:
-- chat-format: Chat formatting.
-- auto-messages: Periodic announcements.
-- censorship: Word filter.
-- commands-control: Command protection.
+### Key Features
+* HEX Colors: Full support for &#FFFFFF format.
+* Multi-Chat: Local, Global, and World chat modes.
+* Moderation: Mute, Kick, Ban, and Chat Clear commands.
+* Automation: Anti-Spam, Anti-Caps, and Auto-Messages.
 
-## 🛡 Commands Control
-- list-type: BLACK_LIST — Blocks listed commands.
-- list-type: WHITE_LIST — Blocks EVERYTHING except listed commands.
+### Commands
+* /chatmt reload — Reload configuration.
+* /chatmt clear — Clear the global chat.
+* /mtmute <player> — Toggle mute for a player.
 
-## 🔨 Punishment
-- /mtkick <player> [reason]
-- /mtban <player> [reason]
+### Permissions
+* chatmt.admin — Access to all administrative commands.
+* chatmt.color — Ability to use colors in chat.
+* chatmt.staff — Access to moderation commands.
