@@ -1,0 +1,29 @@
+# ChatMT v1.4.3 - Русская локализация
+# Поддерживается формат MiniMessage (например, <gradient:gold:yellow>Текст</gradient>)
+
+# Сообщения наказаний
+mute-message: "<#FF5555><b>(!)</b> <gray>Вы не можете писать в чат, так как у вас <gradient:#FF5555:#FFAA00>активный мут</gradient>."
+spam-cooldown: "<#FFBB00><b>(!)</b> <gray>Подождите немного перед следующим сообщением (Анти-спам)."
+no-permission: "<#FF5555>У вас недостаточно прав для выполнения этой команды."
+
+# Команды
+reload-success: "<#55FFBB>Конфигурация и файлы локализации успешно перезагружены!"
+chat-cleared: "<#55FFBB>Чат был очищен администратором."
+help-title: "<gradient:#55FFBB:#00AAFF><b>— Справка по ChatMT —</b></gradient>"
+
+# Join/Quit сообщения (если включены в основном config.yml)
+# Можно использовать %player%
+join-msg: "<#55FFBB><b>+</b> <gray>%player% зашел на сервер."
+quit-msg: "<#FF5555><b>-</b> <gray>%player% покинул сервер."
+
+# Система цензуры
+censorship-cancel: "<#FF5555>Ваше сообщение было заблокировано, так как оно содержит запрещенные слова."
+
+# Текст для GUI (в PunishModule)
+gui-punish-title: "<#FF5555>Наказание: %player%"
+gui-mute-btn: "<#FFBB00><b>ВЫДАТЬ МУТ</b>"
+gui-mute-lore: "<gray>Нажмите, чтобы выбрать время"
+gui-kick-btn: "<#FFFF55><b>КИКНУТЬ</b>"
+gui-kick-lore: "<gray>Выгнать игрока с сервера"
+gui-ban-btn: "<#FF5555><b>ЗАБАНИТЬ</b>"
+gui-ban-lore: "<gray>Забанить игрока навсегда"

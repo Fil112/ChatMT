@@ -1,0 +1,30 @@
+name: ChatMT
+version: 1.4.3
+main: me.chatmt.ChatMT
+api-version: 1.16
+authors: [ChatMT-Team]
+description: Мощный менеджер чата с поддержкой HEX и градиентов.
+softdepend: [Vault, PlaceholderAPI, WorldGuard] # Мягкие зависимости (плагин запустится, даже если их нет)
+
+commands:
+  chatmt:
+    description: Основная команда плагина.
+    aliases: [mt]
+    permission: chatmt.user
+
+permissions:
+  chatmt.user:
+    description: Доступ к базовым командам.
+    default: true
+  chatmt.admin.reload:
+    description: Перезагрузка плагина.
+    default: op
+  chatmt.staff.punish:
+    description: Доступ к GUI наказаний.
+    default: op
+  chatmt.staff.clear:
+    description: Очистка чата.
+    default: op
+  chatmt.bypass.spam:
+    description: Обход анти-спама.
+    default: op

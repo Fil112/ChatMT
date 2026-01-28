@@ -1,0 +1,28 @@
+# ChatMT v1.4.3 - English localization
+# MiniMessage format supported (e.g., <rainbow>Text</rainbow>)
+
+# Punishment messages
+mute-message: "<#FF5555><b>(!)</b> <gray>You cannot chat because you have an <gradient:#FF5555:#FFAA00>active mute</gradient>."
+spam-cooldown: "<#FFBB00><b>(!)</b> <gray>Please wait a moment before sending another message (Anti-spam)."
+no-permission: "<#FF5555>You do not have permission to execute this command."
+
+# Commands
+reload-success: "<#55FFBB>Configuration and language files reloaded successfully!"
+chat-cleared: "<#55FFBB>The chat has been cleared by an administrator."
+help-title: "<gradient:#55FFBB:#00AAFF><b>— ChatMT Help —</b></gradient>"
+
+# Join/Quit messages
+join-msg: "<#55FFBB><b>+</b> <gray>%player% joined the server."
+quit-msg: "<#FF5555><b>-</b> <gray>%player% left the server."
+
+# Censorship
+censorship-cancel: "<#FF5555>Your message was blocked because it contains forbidden words."
+
+# GUI Text
+gui-punish-title: "<#FF5555>Punish: %player%"
+gui-mute-btn: "<#FFBB00><b>MUTE PLAYER</b>"
+gui-mute-lore: "<gray>Click to select duration"
+gui-kick-btn: "<#FFFF55><b>KICK PLAYER</b>"
+gui-kick-lore: "<gray>Remove player from the server"
+gui-ban-btn: "<#FF5555><b>BAN PLAYER</b>"
+gui-ban-lore: "<gray>Ban player permanently"
