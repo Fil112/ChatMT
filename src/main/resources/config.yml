@@ -1,0 +1,72 @@
+# ==========================================
+# ChatMT V2 - Главная конфигурация / Main Configuration
+# Автор / Author: MT Studio
+# ==========================================
+
+ai:
+  # [RU] Настройки интеграции с Gemini
+  # [EN] Gemini AI integration settings
+  gemini:
+    enabled: true
+    api-key: "ВСТАВЬ_СЮДА_СВОЙ_КЛЮЧ / INSERT_YOUR_KEY_HERE"
+    model: "gemini-3.5-flash-lite"
+    # [RU] Триггер, на который будет реагировать бот
+    # [EN] Trigger word for the bot (e.g., "Bot, how to craft a pickaxe?")
+    trigger: "Бот,"
+
+chat:
+  # [RU] Радиус локального чата (в блоках). Если -1, то радиус отключен
+  # [EN] Local chat radius (in blocks). Set to -1 to disable
+  local-radius: 100
+  # [RU] Символ для отправки сообщения в глобальный чат
+  # [EN] Prefix used to send messages to global chat
+  global-prefix: "!"
+  # [RU] Настройки упоминаний (@Ник)
+  # [EN] Player mentions settings (@PlayerName)
+  mentions:
+    enabled: true
+
+filters:
+  caps:
+    enabled: true
+    # [RU] Минимальная длина сообщения для проверки
+    # [EN] Minimum message length to check
+    min-length: 5
+    # [RU] Максимально допустимый процент заглавных букв
+    # [EN] Maximum allowed percentage of uppercase letters
+    max-percent: 70
+  spam:
+    enabled: true
+    # [RU] Задержка между сообщениями (в секундах)
+    # [EN] Delay between messages (in seconds)
+    delay-seconds: 1.5
+  advertising:
+    enabled: true
+    # [RU] Разрешенные ссылки
+    # [EN] Allowed domains
+    whitelist:
+      - "vk.com"
+      - "discord.gg"
+      - "youtube.com"
+  swear:
+    enabled: true
+    # [RU] Список запрещенных слов
+    # [EN] List of blocked words
+    words:
+      - "дурак"
+      - "idiot"
+
+broadcast:
+  enabled: true
+  # [RU] Интервал между авто-сообщениями в секундах (300 = 5 минут)
+  # [EN] Interval between auto-messages in seconds (300 = 5 minutes)
+  interval: 300
+  # [RU] Префикс перед авто-сообщениями
+  # [EN] Prefix for auto-messages
+  prefix: "<dark_gray>[<gradient:#00c6ff:#0072ff>Info</gradient><dark_gray>] <white>"
+  messages:
+    # [RU] Вы можете написать сообщения на любом языке
+    # [EN] You can write messages in any language here
+    - "Не забывайте голосовать за наш сервер! / Don't forget to vote for our server!"
+    - "Нашли баг? Пишите в Discord / Found a bug? Report it on Discord: <aqua>discord.gg/your_guild</aqua>"
+    - "В магазине скидки! / Store sale: 20% off! Пиши/Type <green>/donate</green>"

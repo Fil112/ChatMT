@@ -1,0 +1,65 @@
+# ==========================================
+# ChatMT V2 - Сообщения и Форматы / Messages & Formats
+# Поддержка MiniMessage (HEX, градиенты, клики) / MiniMessage Support (HEX, gradients, clicks)
+# Автор / Author: MT Studio
+# ==========================================
+
+formats:
+  # [RU] Глобальный чат
+  # [EN] Global chat
+  global: "<dark_gray>[<gradient:#ff5e62:#ff9966>G</gradient>] <gray>%player_name% <dark_gray>» <white><message>"
+
+  # [RU] Локальный чат
+  # [EN] Local chat
+  local: "<dark_gray>[<gradient:#56ab2f:#a8e063>L</gradient>] <gray>%player_name% <dark_gray>» <white><message>"
+
+  # [RU] Исходящее личное сообщение (/msg)
+  # [EN] Outgoing private message (/msg)
+  pm-send: "<gray>Вы -> %target%: <white><message>"
+  # pm-send: "<gray>You -> %target%: <white><message>"
+
+  # [RU] Входящее личное сообщение
+  # [EN] Incoming private message
+  pm-receive: "<gray>%sender% -> Вам: <white><message>"
+  # pm-receive: "<gray>%sender% -> You: <white><message>"
+
+  # [RU] Сообщение при входе игрока
+  # [EN] Player join message
+  join: "<dark_gray>[<green>+<dark_gray>] <gray>%player_name% зашёл на сервер"
+  # join: "<dark_gray>[<green>+<dark_gray>] <gray>%player_name% joined the server"
+
+  # [RU] Сообщение при выходе игрока
+  # [EN] Player quit message
+  quit: "<dark_gray>[<red>-<dark_gray>] <gray>%player_name% покинул сервер"
+  # quit: "<dark_gray>[<red>-<dark_gray>] <gray>%player_name% left the server"
+
+system:
+  # [RU] Нет прав
+  # [EN] No permission
+  no-permission: "<red>У вас нет прав для выполнения этой команды!"
+  # no-permission: "<red>You don't have permission to execute this command!"
+
+  # [RU] Успешная перезагрузка (/mt reload)
+  # [EN] Successful reload (/mt reload)
+  reload: "<green>ChatMT успешно перезагружен!"
+  # reload: "<green>ChatMT has been successfully reloaded!"
+
+  # [RU] Задержка анти-спама
+  # [EN] Anti-spam cooldown
+  cooldown: "<red>Не пишите так часто! Подождите немного."
+  # cooldown: "<red>Please don't type so fast! Wait a moment."
+
+  # [RU] Блокировка рекламы
+  # [EN] Advertisement blocked
+  ad-blocked: "<red>Ссылки и реклама на сервере запрещены! Разрешены только официальные ресурсы."
+  # ad-blocked: "<red>Links and advertising are forbidden! Only official resources are allowed."
+
+  # [RU] Заголовок при входе на сервер (Title)
+  # [EN] Welcome Title on join
+  join-title: "<gradient:#ff5e62:#ff9966>Добро пожаловать</gradient>"
+  # join-title: "<gradient:#ff5e62:#ff9966>Welcome</gradient>"
+
+  # [RU] Подзаголовок при входе (Subtitle)
+  # [EN] Welcome Subtitle on join
+  join-subtitle: "<gray>Приятной игры на сервере!"
+  # join-subtitle: "<gray>Enjoy your time on the server!"

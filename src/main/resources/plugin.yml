@@ -1,0 +1,28 @@
+name: ChatMT
+version: '${project.version}'
+main: mt.chat.ChatMT
+api-version: '1.16'
+author: MT Studio
+description: Ультимативный чат-менеджер и система модерации
+
+commands:
+  mt:
+    description: Основная команда ChatMT
+    aliases: [chatmt, cmt]
+  msg:
+    description: Отправить личное сообщение
+    aliases: [ m, tell, whisper, w ]
+  reply:
+      description: Ответить на последнее сообщение
+      aliases: [ r, respond ]
+  kick:
+    description: Кикнуть игрока
+  ban:
+      description: Забанить игрока
+  mute:
+      description: Замутить игрока
+  unmute:
+      description: Снять мут
+  broadcast:
+    description: Написать объявление на весь сервер
+    aliases: [ bc, announce ]
