@@ -47,7 +47,6 @@ public class MonolithLoader {
     public void init() {
         plugin.getLogger().info(" -> Загрузка конфигураций...");
         this.configManager = new ConfigManager(this);
-        this.configManager.load();
 
         plugin.getLogger().info(" -> Подключение к Базе Данных...");
         this.databaseManager = new DatabaseManager(this);
