@@ -1,0 +1,45 @@
+# ==========================================
+# ChatMT V2 - Сообщения и Форматы
+# Поддержка MiniMessage (HEX, градиенты, клики)
+# Автор: MT Studio
+# ==========================================
+
+formats:
+  global: "<dark_gray>[<gradient:#ff5e62:#ff9966>G</gradient>] <gray>%player_name% <dark_gray>» <white><message>"
+  local: "<dark_gray>[<gradient:#56ab2f:#a8e063>L</gradient>] <gray>%player_name% <dark_gray>» <white><message>"
+  pm-send: "<gray>Вы -> %target%: <white><message>"
+  pm-receive: "<gray>%sender% -> Вам: <white><message>"
+  join: "<dark_gray>[<green>+<dark_gray>] <gray>%player_name% зашёл на сервер"
+  quit: "<dark_gray>[<red>-<dark_gray>] <gray>%player_name% покинул сервер"
+  msg-usage: "<red>Использование: /msg <ник> <сообщение>"
+  reply-usage: "<red>Использование: /reply <сообщение>"
+  chat-hover: "<gray>Нажмите, чтобы написать в ЛС"
+
+system:
+  no-permission: "<red>У вас нет прав для выполнения этой команды!"
+  reload: "<green>ChatMT успешно перезагружен!"
+  cooldown: "<red>Не пишите так часто! Подождите немного."
+  ad-blocked: "<red>Ссылки и реклама на сервере запрещены! Разрешены только официальные ресурсы."
+  join-title: "<gradient:#ff5e62:#ff9966>Добро пожаловать</gradient>"
+  join-subtitle: "<gray>Приятной игры на сервере!"
+  console-name: "Консоль"
+  player-offline: "<gray>Игрок не найден или сейчас оффлайн."
+  nobody-heard: "<gray>[<red>!<gray>] <red>Вас никто не услышал... Напишите <yellow>%prefix% <red>перед сообщением для глобального чата."
+
+punishments:
+  default-reason: "Нарушение правил сервера"
+  ban-screen: "&c&lВЫ ЗАБЛОКИРОВАНЫ НА СЕРВЕРЕ\n\n&7Ваш аккаунт был отстранен от игры.\n&7Блокировка истекает через: &e%time%\n\n&8Подать апелляцию можно в нашем Discord!"
+
+time:
+  permanent: "Навсегда"
+  expired: "Истекло"
+  # Используйте %d для дней, %02d для часов/минут/секунд (с ведущим нулем)
+  format-days: "%d дн. %02d ч. %02d мин."
+  format-hours: "%02d ч. %02d мин. %02d сек."
+
+ignore:
+  added: "<green>Игрок <white>%target% <green>успешно добавлен в черный список."
+  removed: "<yellow>Игрок <white>%target% <yellow>удален из черного списка."
+  already-ignored: "<red>Этот игрок уже находится в вашем черном списке!"
+  cannot-ignore-self: "<red>Вы не можете добавить в игнор самого себя."
+  you-are-ignored: "<red>Упс! Этот игрок ограничил доступ к своим личным сообщениям для вас."

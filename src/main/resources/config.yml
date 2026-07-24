@@ -3,6 +3,11 @@
 # Автор / Author: MT Studio
 # ==========================================
 
+system:
+  # Выберите язык плагина (файлы берутся из папки plugins/ChatMT/language/)
+  # Доступно по умолчанию: ru, en
+  language: "ru"
+
 ai:
   # [RU] Настройки интеграции с Gemini
   # [EN] Gemini AI integration settings
@@ -70,3 +75,13 @@ broadcast:
     - "Не забывайте голосовать за наш сервер! / Don't forget to vote for our server!"
     - "Нашли баг? Пишите в Discord / Found a bug? Report it on Discord: <aqua>discord.gg/your_guild</aqua>"
     - "В магазине скидки! / Store sale: 20% off! Пиши/Type <green>/donate</green>"
+
+database:
+  # Тип базы данных: sqlite или mysql
+  type: "sqlite"
+  mysql:
+    host: "127.0.0.1"
+    port: 3306
+    database: "chatmt"
+    username: "root"
+    password: "password"

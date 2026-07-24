@@ -1,59 +1,68 @@
 package mt.chat.system;
 
-import mt.chat.ChatMT;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
+import java.io.IOException;
 
 public class ConfigManager {
 
     private final MonolithLoader loader;
-    private final ChatMT plugin;
-
     private FileConfiguration config;
-    private FileConfiguration messages;
-
-    private File configFile;
-    private File messagesFile;
+    private FileConfiguration messages; // Здесь теперь хранится активный языковой файл
 
     public ConfigManager(MonolithLoader loader) {
         this.loader = loader;
-        this.plugin = loader.getPlugin();
+        loadConfigs();
     }
 
-    /**
-     * Загружает конфигурационные файлы.
-     * Если папки или файлов нет — создаёт их из ресурсов плагина.
-     */
-    public void load() {
-        // Создаем папку plugins/ChatMT, если её не существует
-        if (!plugin.getDataFolder().exists()) {
-            plugin.getDataFolder().mkdirs();
-        }
-
-        configFile = new File(plugin.getDataFolder(), "config.yml");
-        messagesFile = new File(plugin.getDataFolder(), "messages.yml");
-
-        // Если файлов конфигурации физически нет в папке, выгружаем дефолтные
+    public void loadConfigs() {
+        // 1. Загрузка основного config.yml
+        File configFile = new File(loader.getPlugin().getDataFolder(), "config.yml");
         if (!configFile.exists()) {
-            plugin.saveResource("config.yml", false);
+            loader.getPlugin().saveDefaultConfig();
         }
-        if (!messagesFile.exists()) {
-            plugin.saveResource("messages.yml", false);
+        config = YamlConfiguration.loadConfiguration(configFile);
+
+        // 2. Создание папки language
+        File langFolder = new File(loader.getPlugin().getDataFolder(), "language");
+        if (!langFolder.exists()) {
+            langFolder.mkdirs();
+            // Выгружаем стандартные языки из jar-файла при первом запуске
+            saveDefaultLanguage(langFolder, "ru.yml");
+            saveDefaultLanguage(langFolder, "en.yml");
         }
 
-        // Читаем файлы и загружаем их в память сервера
-        config = YamlConfiguration.loadConfiguration(configFile);
-        messages = YamlConfiguration.loadConfiguration(messagesFile);
+        // 3. Читаем выбранный язык из config.yml (по умолчанию ru)
+        String langName = config.getString("system.language", "ru") + ".yml";
+        File activeLangFile = new File(langFolder, langName);
+
+        // Защита от дурака: если админ указал несуществующий язык (например, fr.yml),
+        // плагин не крашнется, а просто создаст пустой файл или откатится
+        if (!activeLangFile.exists()) {
+            loader.getLoggerMT().error("Языковой файл " + langName + " не найден! Будет создан пустой файл.");
+            saveDefaultLanguage(langFolder, langName);
+        }
+
+        messages = YamlConfiguration.loadConfiguration(activeLangFile);
     }
 
-    /**
-     * Быстрая перезагрузка конфигурации.
-     * Используется при вводе команды /mt reload
-     */
-    public void reload() {
-        load();
+    private void saveDefaultLanguage(File langFolder, String fileName) {
+        File file = new File(langFolder, fileName);
+        if (!file.exists()) {
+            // Пытаемся скопировать файл из папки resources/language/ внутри плагина
+            if (loader.getPlugin().getResource("language/" + fileName) != null) {
+                loader.getPlugin().saveResource("language/" + fileName, false);
+            } else {
+                // Если файла нет внутри плагина, создаем пустой, чтобы избежать NullPointerException
+                try {
+                    file.createNewFile();
+                } catch (IOException e) {
+                    loader.getLoggerMT().error("Не удалось создать языковой файл: " + fileName);
+                }
+            }
+        }
     }
 
     public FileConfiguration getConfig() {
@@ -62,5 +71,9 @@ public class ConfigManager {
 
     public FileConfiguration getMessages() {
         return messages;
+    }
+
+    public void reload() {
+        loadConfigs();
     }
 }

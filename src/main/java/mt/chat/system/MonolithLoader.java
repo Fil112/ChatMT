@@ -4,6 +4,7 @@ import mt.chat.ChatMT;
 import mt.chat.ai.GeminiManager;
 import mt.chat.broadcast.AnnounceCmd;
 import mt.chat.broadcast.AutoBroadcaster;
+import mt.chat.database.DatabaseManager;
 import mt.chat.engine.ChatEngine;
 import mt.chat.engine.ChatFilters;
 import mt.chat.engine.MentionManager;
@@ -11,11 +12,7 @@ import mt.chat.engine.PrivateMessages;
 import mt.chat.listeners.ChatListener;
 import mt.chat.listeners.CommandListener;
 import mt.chat.listeners.PlayerJoinListener;
-import mt.chat.moderation.AntiAdvertising;
-import mt.chat.moderation.AntiSwear;
-import mt.chat.moderation.MtCmd;
-import mt.chat.moderation.PunishCmd;
-import mt.chat.moderation.PunishManager;
+import mt.chat.moderation.*;
 import mt.chat.utils.LoggerMT;
 import mt.chat.utils.SpyManager;
 import org.bukkit.plugin.PluginManager;
@@ -28,12 +25,14 @@ public class MonolithLoader {
     private ConfigManager configManager;
     private LoggerMT loggerMT;
     private GeminiManager geminiManager;
+    private DatabaseManager databaseManager;
 
     // --- Модерация и фильтры ---
     private ChatFilters chatFilters;
     private AntiSwear antiSwear;
     private AntiAdvertising antiAdvertising;
     private PunishManager punishManager;
+    private IgnoreManager ignoreManager;
     private SpyManager spyManager;
 
     // --- Чат и уведомления ---
@@ -50,6 +49,10 @@ public class MonolithLoader {
         this.configManager = new ConfigManager(this);
         this.configManager.load();
 
+        plugin.getLogger().info(" -> Подключение к Базе Данных...");
+        this.databaseManager = new DatabaseManager(this);
+        this.databaseManager.connect();
+
         plugin.getLogger().info(" -> Запуск логгера...");
         this.loggerMT = new LoggerMT(this);
 
@@ -63,6 +66,9 @@ public class MonolithLoader {
 
         plugin.getLogger().info(" -> Запуск системы наказаний...");
         this.punishManager = new PunishManager(this);
+
+        plugin.getLogger().info(" -> Запуск системы игноров...");
+        this.ignoreManager = new IgnoreManager(this);
 
         plugin.getLogger().info(" -> Запуск системы шпионажа...");
         this.spyManager = new SpyManager(this);
@@ -84,9 +90,15 @@ public class MonolithLoader {
 
     public void shutdown() {
         plugin.getLogger().info(" -> Остановка процессов ChatMT...");
+
         // Обязательно тушим таймер автоброадкастера, чтобы не было утечек при релоаде сервера
         if (this.autoBroadcaster != null) {
             this.autoBroadcaster.stop();
+        }
+
+        // Корректно закрываем пулы соединений HikariCP
+        if (this.databaseManager != null) {
+            this.databaseManager.disconnect();
         }
     }
 
@@ -132,6 +144,10 @@ public class MonolithLoader {
         return configManager;
     }
 
+    public DatabaseManager getDatabaseManager() {
+        return databaseManager;
+    }
+
     public LoggerMT getLoggerMT() {
         return loggerMT;
     }
@@ -154,6 +170,10 @@ public class MonolithLoader {
 
     public PunishManager getPunishManager() {
         return punishManager;
+    }
+
+    public IgnoreManager getIgnoreManager() {
+        return ignoreManager;
     }
 
     public SpyManager getSpyManager() {

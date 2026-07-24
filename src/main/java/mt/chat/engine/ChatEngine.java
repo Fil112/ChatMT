@@ -57,42 +57,57 @@ public class ChatEngine {
             if (finalMessage.isEmpty()) return;
         }
 
-        // 2. Достаем нужный формат из messages.yml
+        // 2. Достаем нужный формат из языкового файла
         String format = loader.getConfigManager().getMessages().getString(formatPath, "<gray>%player_name% <dark_gray>» <white><message>");
 
-        // 3. Обрабатываем PlaceholderAPI (Парсим %player_name% и другие PAPI)
+        // 3. Создаем интерактивный никнейм (клик + ховер)
+        String hoverText = loader.getConfigManager().getMessages().getString(
+                "formats.chat-hover",
+                "<gray>Нажмите, чтобы написать в ЛС"
+        );
+        String interactiveName = "<click:suggest_command:'/msg " + sender.getName() + " '>" +
+                "<hover:show_text:'" + hoverText + "'>" +
+                sender.getName() +
+                "</hover></click>";
+
+        // Заменяем плейсхолдер ника ДО обработки PAPI, чтобы сохранить MiniMessage теги
+        format = format.replace("%player_name%", interactiveName);
+
+        // 4. Обрабатываем PlaceholderAPI
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             format = PlaceholderAPI.setPlaceholders(sender, format);
-        } else {
-            // Фолбэк, если PAPI не установлен
-            format = format.replace("%player_name%", sender.getName());
         }
 
-        // 4. Вставляем само сообщение игрока в формат
+        // 5. Вставляем само сообщение игрока в формат
         // Прогоняем текст через систему упоминаний (@Ник) перед отправкой
-        finalMessage = loader.getMentionManager().processMentions(finalMessage);
+        if (loader.getMentionManager() != null) {
+            finalMessage = loader.getMentionManager().processMentions(finalMessage);
+        }
 
         format = format.replace("<message>", finalMessage);
 
-        // 5. Превращаем MiniMessage-строку (<gradient:...>) в Bukkit Component, а затем в HEX-строку для Spigot
+        // 6. Превращаем MiniMessage-строку (<gradient:...>) в Bukkit Component, а затем в HEX-строку для Spigot
         Component parsedComponent = miniMessage.deserialize(format);
         String readyMessage = legacySerializer.serialize(parsedComponent);
 
-        // 6. Рассылка сообщения
+        // 7. Рассылка сообщения с учетом системы игноров
         if (isGlobal) {
-            // Отправляем всем на сервере
             for (Player p : Bukkit.getOnlinePlayers()) {
-                p.sendMessage(readyMessage);
+                // Если игрок не игнорирует отправителя (или это сам отправитель) - отправляем
+                if (p.equals(sender) || !loader.getIgnoreManager().isIgnored(p.getUniqueId(), sender.getUniqueId())) {
+                    p.sendMessage(readyMessage);
+                }
             }
-            // Также дублируем в консоль для логов
             Bukkit.getConsoleSender().sendMessage("[Global] " + readyMessage);
         } else {
             // Локальный чат: ищем игроков только в том же мире и в нужном радиусе
             int receiversCount = 0;
             for (Player p : sender.getWorld().getPlayers()) {
                 if (p.getLocation().distance(sender.getLocation()) <= localRadius) {
-                    p.sendMessage(readyMessage);
-                    receiversCount++;
+                    if (p.equals(sender) || !loader.getIgnoreManager().isIgnored(p.getUniqueId(), sender.getUniqueId())) {
+                        p.sendMessage(readyMessage);
+                        receiversCount++;
+                    }
                 }
             }
 
@@ -100,11 +115,18 @@ public class ChatEngine {
 
             // Если игрок орал в пустоту (рядом никого нет)
             if (receiversCount == 1) {
-                sender.sendMessage("§7[§c!§7] §cВас никто не услышал... Напишите §e" + globalPrefix + " §cперед сообщением для глобального чата.");
+                String nobodyMsg = loader.getConfigManager().getMessages().getString(
+                        "system.nobody-heard",
+                        "<gray>[<red>!<gray>] <red>Вас никто не услышал... Напишите <yellow>%prefix% <red>перед сообщением для глобального чата."
+                );
+                Component nobodyComp = miniMessage.deserialize(nobodyMsg.replace("%prefix%", globalPrefix));
+                sender.sendMessage(legacySerializer.serialize(nobodyComp));
             }
         }
 
-        // 7. Записываем сообщение в лог-файл (асинхронно, чтобы не грузить сервер)
-        loader.getLoggerMT().logChat(sender.getName(), originalMessage, isGlobal);
+        // 8. Записываем сообщение в лог-файл
+        if (loader.getLoggerMT() != null) {
+            loader.getLoggerMT().logChat(sender.getName(), originalMessage, isGlobal);
+        }
     }
 }

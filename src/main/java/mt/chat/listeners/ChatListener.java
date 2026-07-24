@@ -1,6 +1,9 @@
 package mt.chat.listeners;
 
 import mt.chat.system.MonolithLoader;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -21,11 +24,18 @@ public class ChatListener implements Listener {
         Player player = event.getPlayer();
         String message = event.getMessage();
 
-        // 0. Проверка на мут
+        // 0. Проверка на мут (используем конфиги и MiniMessage)
         if (loader.getPunishManager().isMuted(player.getUniqueId())) {
             event.setCancelled(true);
-            String time = loader.getPunishManager().getRemainingTime(player.getUniqueId());
-            player.sendMessage(mt.chat.utils.ColorUtils.colorize("<red>У вас мут чата! Осталось: <gray>" + time));
+            String muteMsg = loader.getConfigManager().getMessages().getString(
+                    "punishments.muted",
+                    "<red>У вас мут чата! Осталось: <yellow>%time%"
+            );
+            String timeLeft = loader.getPunishManager().getMuteRemainingTime(player.getUniqueId());
+
+            // Конвертируем для Spigot
+            Component comp = MiniMessage.miniMessage().deserialize(muteMsg.replace("%time%", timeLeft));
+            player.sendMessage(LegacyComponentSerializer.legacySection().serialize(comp));
             return;
         }
 

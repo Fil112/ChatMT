@@ -1,12 +1,15 @@
 package mt.chat.engine;
 
 import mt.chat.system.MonolithLoader;
-import mt.chat.utils.ColorUtils;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,7 +26,7 @@ public class PrivateMessages implements CommandExecutor {
     }
 
     @Override
-    public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         if (!(sender instanceof Player)) {
             sender.sendMessage("Только игроки могут писать в ЛС.");
             return true;
@@ -34,23 +37,30 @@ public class PrivateMessages implements CommandExecutor {
         // Обработка /msg <игрок> <текст>
         if (command.getName().equalsIgnoreCase("msg")) {
             if (args.length < 2) {
-                player.sendMessage(ColorUtils.colorize("<red>Использование: /msg <ник> <сообщение>"));
+                String usageMsg = loader.getConfigManager().getMessages().getString("formats.msg-usage", "<red>Использование: /msg <ник> <сообщение>");
+                sendConverted(player, usageMsg);
                 return true;
             }
 
             Player target = Bukkit.getPlayer(args[0]);
             if (target == null || !target.isOnline()) {
-                player.sendMessage(ColorUtils.colorize("<gray>Игрок не найден."));
+                String offlineMsg = loader.getConfigManager().getMessages().getString("system.player-offline", "<gray>Игрок не найден или оффлайн.");
+                sendConverted(player, offlineMsg);
                 return true;
             }
 
             if (target.equals(player)) {
-                player.sendMessage(ColorUtils.colorize("<gray>Нельзя писать самому себе."));
+                sendConverted(player, "<gray>Нельзя писать самому себе.");
                 return true;
             }
 
-            // Склеиваем сообщение из аргументов
-            String message = String.join(" ", args).substring(args[0].length() + 1);
+            // Безопасное склеивание сообщения из аргументов
+            StringBuilder messageBuilder = new StringBuilder();
+            for (int i = 1; i < args.length; i++) {
+                messageBuilder.append(args[i]).append(" ");
+            }
+            String message = messageBuilder.toString().trim();
+
             sendMessage(player, target, message);
             return true;
         }
@@ -58,12 +68,13 @@ public class PrivateMessages implements CommandExecutor {
         // Обработка /reply <текст>
         if (command.getName().equalsIgnoreCase("reply")) {
             if (args.length < 1) {
-                player.sendMessage(ColorUtils.colorize("<red>Использование: /r <сообщение>"));
+                String usageMsg = loader.getConfigManager().getMessages().getString("formats.reply-usage", "<red>Использование: /reply <сообщение>");
+                sendConverted(player, usageMsg);
                 return true;
             }
 
             if (!lastConversations.containsKey(player.getUniqueId())) {
-                player.sendMessage(ColorUtils.colorize("<gray>Вам некому отвечать."));
+                sendConverted(player, "<gray>Вам некому отвечать.");
                 return true;
             }
 
@@ -71,7 +82,7 @@ public class PrivateMessages implements CommandExecutor {
             Player target = Bukkit.getPlayer(targetId);
 
             if (target == null || !target.isOnline()) {
-                player.sendMessage(ColorUtils.colorize("<gray>Игрок уже вышел с сервера."));
+                sendConverted(player, "<gray>Игрок уже вышел с сервера.");
                 return true;
             }
 
@@ -84,21 +95,58 @@ public class PrivateMessages implements CommandExecutor {
     }
 
     private void sendMessage(Player sender, Player target, String message) {
-        // Форматы сообщений для отправителя и получателя
-        String formatTo = loader.getConfigManager().getMessages().getString("formats.pm-send", "<gray>Вы -> %target%: <white><message>");
-        String formatFrom = loader.getConfigManager().getMessages().getString("formats.pm-receive", "<gray>%sender% -> Вам: <white><message>");
+        // 1. Проверка системы игноров (отменяем отправку, если мы в ЧС)
+        if (loader.getIgnoreManager().isIgnored(target.getUniqueId(), sender.getUniqueId())) {
+            String ignoredMsg = loader.getConfigManager().getMessages().getString(
+                    "ignore.you-are-ignored",
+                    "<red>Упс! Этот игрок ограничил доступ к своим личным сообщениям для вас."
+            );
+            sendConverted(sender, ignoredMsg);
+            return;
+        }
 
-        formatTo = formatTo.replace("%target%", target.getName()).replace("<message>", message);
-        formatFrom = formatFrom.replace("%sender%", sender.getName()).replace("<message>", message);
+        // 2. Пропускаем текст через умный антимат
+        message = loader.getAntiSwear().filterSwear(sender, message);
 
-        sender.sendMessage(ColorUtils.colorize(formatTo));
-        target.sendMessage(ColorUtils.colorize(formatFrom));
+        // 3. Форматируем сообщения (MiniMessage)
+        String formatTo = loader.getConfigManager().getMessages().getString("formats.pm-send", "<gray>Вы -> %target%: <white>%message%");
+        String formatFrom = loader.getConfigManager().getMessages().getString("formats.pm-receive", "<gray>%sender% -> Вам: <white>%message%");
 
-        // Обновляем историю переписки для обоих игроков
+        // Заменяем плейсхолдеры
+        String finalTo = formatTo.replace("%target%", target.getName())
+                .replace("%message%", message)
+                .replace("<message>", message);
+
+        String finalFrom = formatFrom.replace("%sender%", sender.getName())
+                .replace("%message%", message)
+                .replace("<message>", message);
+
+        // 4. Отправка
+        sendConverted(sender, finalTo);
+        sendConverted(target, finalFrom);
+
+        // 5. Обновляем историю переписки для команды /reply
         lastConversations.put(sender.getUniqueId(), target.getUniqueId());
         lastConversations.put(target.getUniqueId(), sender.getUniqueId());
 
-        // Отправка в шпионскую систему для админов (Social Spy)
-        loader.getSpyManager().sendSocialSpyLog(sender, target, message);
+        // 6. Отправка в шпионскую систему для админов (Social Spy)
+        if (loader.getSpyManager() != null) {
+            loader.getSpyManager().sendSocialSpyLog(sender, target, message);
+        }
+
+        // 7. Логируем в файл
+        if (loader.getLoggerMT() != null) {
+            loader.getLoggerMT().logPrivateMessage(sender.getName(), target.getName(), message);
+        }
+    }
+
+    /**
+     * Вспомогательный метод для перевода MiniMessage Component в строку,
+     * понятную ванильному ядру Spigot.
+     */
+    private void sendConverted(Player player, String miniMessageText) {
+        Component comp = MiniMessage.miniMessage().deserialize(miniMessageText);
+        String legacyText = LegacyComponentSerializer.legacySection().serialize(comp);
+        player.sendMessage(legacyText);
     }
 }

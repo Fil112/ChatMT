@@ -10,10 +10,10 @@ commands:
     description: Основная команда ChatMT
     aliases: [chatmt, cmt]
   msg:
-    description: Отправить личное сообщение
+    description: Отправить личное сообщение игроку
     aliases: [ m, tell, whisper, w ]
   reply:
-      description: Ответить на последнее сообщение
+      description: Ответить на последнее сообщение игрока
       aliases: [ r, respond ]
   kick:
     description: Кикнуть игрока
@@ -22,7 +22,9 @@ commands:
   mute:
       description: Замутить игрока
   unmute:
-      description: Снять мут
+      description: Снять мут с игрока
   broadcast:
-    description: Написать объявление на весь сервер
+    description: Написать объявление на весь сервер для игроков
     aliases: [ bc, announce ]
+  ignore:
+    description: Игнорировать игрока
