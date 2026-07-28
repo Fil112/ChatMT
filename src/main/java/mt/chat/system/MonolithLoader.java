@@ -127,6 +127,8 @@ public class MonolithLoader {
         plugin.getCommand("unban").setExecutor(punishCmd);
         plugin.getCommand("mute").setExecutor(punishCmd);
         plugin.getCommand("unmute").setExecutor(punishCmd);
+        plugin.getCommand("warn").setExecutor(punishCmd);
+        plugin.getCommand("unwarn").setExecutor(punishCmd);
 
         // Объявления
         plugin.getCommand("broadcast").setExecutor(new AnnounceCmd());

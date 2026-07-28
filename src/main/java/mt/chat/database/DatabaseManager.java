@@ -85,14 +85,22 @@ public class DatabaseManager {
                 "expires BIGINT NOT NULL" +
                 ");";
 
+        // Таблица варнов
+        String warnsTable = "CREATE TABLE IF NOT EXISTS chatmt_warns (" +
+                "uuid VARCHAR(36) PRIMARY KEY, " +
+                "warn_count INT NOT NULL" +
+                ");";
+
         try (Connection connection = getConnection();
              PreparedStatement st1 = connection.prepareStatement(mutesTable);
              PreparedStatement st2 = connection.prepareStatement(ignoresTable);
-             PreparedStatement st3 = connection.prepareStatement(bansTable)) {
+             PreparedStatement st3 = connection.prepareStatement(bansTable);
+             PreparedStatement st4 = connection.prepareStatement(warnsTable)) {
 
             st1.execute();
             st2.execute();
-            st3.execute(); // Создаем таблицу банов
+            st3.execute();
+            st4.execute();
 
         } catch (SQLException e) {
             loader.getPlugin().getLogger().severe("Не удалось создать таблицы в базе данных!");

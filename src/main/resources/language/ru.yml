@@ -31,6 +31,10 @@ punishments:
   ban-screen: "&c&lВЫ ЗАБЛОКИРОВАНЫ НА СЕРВЕРЕ\n\n&7Ваш аккаунт был отстранен от игры.\n&7Блокировка истекает через: &e%time%\n\n&8Подать апелляцию можно в нашем Discord!"
   not-banned: "<red>Игрок <yellow>%player% <red>не находится в бане!"
   unban-success: "<green>Вы успешно сняли блокировку с игрока <white>%player%<green>!"
+  warn-broadcast: "<dark_gray>[<red>!<dark_gray>] <white>%player% <gray>получил предупреждение (<red>%current%/%max%<gray>). Причина: <white>%reason%"
+  warn-limit-reached: "<dark_gray>[<red>!<dark_gray>] <white>%player% <gray>получил системный мут за превышение лимита предупреждений."
+  no-warns: "<red>У игрока <yellow>%player% <red>нет предупреждений!"
+  unwarn-success: "<green>Вы сняли предупреждение с <white>%player%<green>. Осталось варнов: <white>%warns%"
 
 time:
   permanent: "Навсегда"

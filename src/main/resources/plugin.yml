@@ -30,6 +30,12 @@ commands:
   unmute:
     description: Снять мут с игрока
     permission: chatmt.punish.unmute
+  warn:
+    description: Выдать предупреждение игроку
+    permission: chatmt.punish.warn
+  unwarn:
+    description: Снять одно предупреждение с игрока
+    permission: chatmt.punish.unwarn
   broadcast:
     description: Написать объявление на весь сервер для игроков
     aliases: [ bc, announce ]

@@ -1,22 +1,27 @@
-# ==========================================
-# ChatMT V2 - Главная конфигурация / Main Configuration
-# Автор / Author: MT Studio
-# ==========================================
+# ========================================================== #
+#                                                            #
+#                 ChatMT V2 - Configuration                  #
+#                   Author: MT Studio                        #
+#                                                            #
+# ========================================================== #
+# [RU] Поддерживается форматирование MiniMessage (градиенты, ховеры, клики)
+# [EN] MiniMessage formatting is supported (gradients, hovers, clicks)
 
 system:
-  # Выберите язык плагина (файлы берутся из папки plugins/ChatMT/language/)
-  # Доступно по умолчанию: ru, en
+  # [RU] Выберите язык плагина (файлы из папки plugins/ChatMT/language/)
+  # [EN] Select plugin language (files from plugins/ChatMT/language/)
+  # Доступно / Available: ru, en
   language: "ru"
 
 ai:
-  # [RU] Настройки интеграции с Gemini
+  # [RU] Настройки интеграции с нейросетью Gemini
   # [EN] Gemini AI integration settings
   gemini:
     enabled: true
     api-key: "ВСТАВЬ_СЮДА_СВОЙ_КЛЮЧ / INSERT_YOUR_KEY_HERE"
     model: "gemini-3.5-flash-lite"
     # [RU] Триггер, на который будет реагировать бот
-    # [EN] Trigger word for the bot (e.g., "Bot, how to craft a pickaxe?")
+    # [EN] Trigger word for the bot
     trigger: "Бот,"
 
 chat:
@@ -26,10 +31,23 @@ chat:
   # [RU] Символ для отправки сообщения в глобальный чат
   # [EN] Prefix used to send messages to global chat
   global-prefix: "!"
-  # [RU] Настройки упоминаний (@Ник)
-  # [EN] Player mentions settings (@PlayerName)
+
+  # [RU] Формат чата (Оставь пустым "", если используешь другой плагин на чат, например LuckPerms+ChatEx)
+  # [EN] Chat format (Leave blank "" if using another chat plugin)
+  format:
+    global: "<dark_gray>[<gold>G<dark_gray>] <gray>%player% <dark_gray>» <white>%message%"
+    local: "<dark_gray>[<yellow>L<dark_gray>] <gray>%player% <dark_gray>» <white>%message%"
+
   mentions:
+    # [RU] Настройки упоминаний (@Ник)
+    # [EN] Player mentions settings (@PlayerName)
     enabled: true
+    color: "<yellow><bold>"
+    # [RU] Настройка звука при упоминании (Оставьте пусто "", чтобы отключить)
+    # [EN] Mention sound settings (Leave blank "" to disable)
+    sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
+    volume: 1.0
+    pitch: 1.2
 
 filters:
   caps:
@@ -40,11 +58,16 @@ filters:
     # [RU] Максимально допустимый процент заглавных букв
     # [EN] Maximum allowed percentage of uppercase letters
     max-percent: 70
+    # [RU] Действие: 'block' (запретить отправку), 'lower' (перевести в нижний регистр)
+    # [EN] Action: 'block' (prevent sending), 'lower' (convert to lowercase)
+    action: "lower"
+
   spam:
     enabled: true
     # [RU] Задержка между сообщениями (в секундах)
     # [EN] Delay between messages (in seconds)
     delay-seconds: 1.5
+
   advertising:
     enabled: true
     # [RU] Разрешенные ссылки
@@ -53,8 +76,14 @@ filters:
       - "vk.com"
       - "discord.gg"
       - "youtube.com"
+      - "t.me"
+
   swear:
     enabled: true
+    # [RU] Действие: 'block' (запретить), 'replace' (заменить на звездочки)
+    # [EN] Action: 'block' (prevent sending), 'replace' (replace with stars)
+    action: "replace"
+    replace-char: "*"
     # [RU] Список запрещенных слов
     # [EN] List of blocked words
     words:
@@ -66,18 +95,24 @@ broadcast:
   # [RU] Интервал между авто-сообщениями в секундах (300 = 5 минут)
   # [EN] Interval between auto-messages in seconds (300 = 5 minutes)
   interval: 300
-  # [RU] Префикс перед авто-сообщениями
-  # [EN] Prefix for auto-messages
   prefix: "<dark_gray>[<gradient:#00c6ff:#0072ff>Info</gradient><dark_gray>] <white>"
   messages:
-    # [RU] Вы можете написать сообщения на любом языке
-    # [EN] You can write messages in any language here
     - "Не забывайте голосовать за наш сервер! / Don't forget to vote for our server!"
-    - "Нашли баг? Пишите в Discord / Found a bug? Report it on Discord: <aqua>discord.gg/your_guild</aqua>"
-    - "В магазине скидки! / Store sale: 20% off! Пиши/Type <green>/donate</green>"
+    # Пример использования MiniMessage для кликабельной ссылки
+    - "Нашли баг? Пишите в Discord: <click:open_url:'https://discord.gg/your_guild'><aqua><underlined>discord.gg/your_guild</underlined></aqua></click>"
+    - "В магазине скидки! Пиши <click:run_command:'/donate'><hover:show_text:'<green>Нажми, чтобы открыть донат-меню!'><green>/donate</green></hover></click>"
+
+punishments:
+  # [RU] Лимит предупреждений до автоматического наказания
+  # [EN] Warning limit before automatic punishment
+  warn-limit: 3
+  # [RU] Время системного мута при достижении лимита варнов (в секундах, 7200 = 2 часа)
+  # [EN] System mute duration when warn limit is reached (in seconds)
+  warn-mute-duration: 7200
 
 database:
-  # Тип базы данных: sqlite или mysql
+  # [RU] Тип базы данных: sqlite или mysql
+  # [EN] Database type: sqlite or mysql
   type: "sqlite"
   mysql:
     host: "127.0.0.1"

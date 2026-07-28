@@ -127,6 +127,56 @@ public class PunishCmd implements CommandExecutor {
             return true;
         }
 
+        // --- Обработка WARN ---
+        if (cmdName.equals("warn")) {
+            @SuppressWarnings("deprecation")
+            OfflinePlayer offlineTarget = Bukkit.getOfflinePlayer(targetName);
+
+            loader.getPunishManager().warnPlayer(offlineTarget.getUniqueId(), targetName);
+
+            int currentWarns = loader.getPunishManager().getWarns(offlineTarget.getUniqueId());
+            int maxWarns = loader.getConfigManager().getConfig().getInt("punishments.warn-limit", 3);
+
+            // Если currentWarns == 0, значит варн стал последним и игрок получил мут (счетчик обнулился)
+            if (currentWarns > 0) {
+                String bcMsg = loader.getConfigManager().getMessages().getString(
+                        "punishments.warn-broadcast",
+                        "<dark_gray>[<red>!<dark_gray>] <white>%player% <gray>получил предупреждение (<red>%current%/%max%<gray>). Причина: <white>%reason%"
+                );
+                Bukkit.broadcastMessage(ColorUtils.colorize(bcMsg
+                        .replace("%player%", targetName)
+                        .replace("%reason%", reason)
+                        .replace("%current%", String.valueOf(currentWarns))
+                        .replace("%max%", String.valueOf(maxWarns))));
+            }
+
+            loader.getLoggerMT().logPunish(sender.getName(), targetName, "WARN", reason);
+            return true;
+        }
+
+        // --- Обработка UNWARN ---
+        if (cmdName.equals("unwarn")) {
+            @SuppressWarnings("deprecation")
+            OfflinePlayer offlineTarget = Bukkit.getOfflinePlayer(targetName);
+
+            int currentWarns = loader.getPunishManager().getWarns(offlineTarget.getUniqueId());
+            if (currentWarns <= 0) {
+                String noWarns = loader.getConfigManager().getMessages().getString("punishments.no-warns", "<red>У игрока <yellow>%player% <red>нет предупреждений!");
+                sender.sendMessage(ColorUtils.colorize(noWarns.replace("%player%", targetName)));
+                return true;
+            }
+
+            loader.getPunishManager().unwarnPlayer(offlineTarget.getUniqueId());
+
+            String successMsg = loader.getConfigManager().getMessages().getString("punishments.unwarn-success", "<green>Вы сняли предупреждение с <white>%player%<green>. Осталось варнов: <white>%warns%");
+            sender.sendMessage(ColorUtils.colorize(successMsg
+                    .replace("%player%", targetName)
+                    .replace("%warns%", String.valueOf(currentWarns - 1))));
+
+            loader.getLoggerMT().logPunish(sender.getName(), targetName, "UNWARN", "Снятие предупреждения");
+            return true;
+        }
+
         return true;
     }
 }

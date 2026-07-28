@@ -31,6 +31,10 @@ punishments:
   ban-screen: "&c&lYOU ARE BANNED FROM THE SERVER\n\n&7Your account has been suspended.\n&7Ban expires in: &e%time%\n\n&8You can appeal in our Discord!"
   not-banned: "<red>Player <yellow>%player% <red>is not banned!"
   unban-success: "<green>You have successfully unbanned <white>%player%<green>!"
+  warn-broadcast: "<dark_gray>[<red>!<dark_gray>] <white>%player% <gray>received a warning (<red>%current%/%max%<gray>). Reason: <white>%reason%"
+  warn-limit-reached: "<dark_gray>[<red>!<dark_gray>] <white>%player% <gray>received a system mute for exceeding the warning limit."
+  no-warns: "<red>Player <yellow>%player% <red>has no warnings!"
+  unwarn-success: "<green>You removed a warning from <white>%player%<green>. Remaining warnings: <white>%warns%"
 
 time:
   permanent: "Permanent"
