@@ -29,6 +29,8 @@ system:
 punishments:
   default-reason: "Нарушение правил сервера"
   ban-screen: "&c&lВЫ ЗАБЛОКИРОВАНЫ НА СЕРВЕРЕ\n\n&7Ваш аккаунт был отстранен от игры.\n&7Блокировка истекает через: &e%time%\n\n&8Подать апелляцию можно в нашем Discord!"
+  not-banned: "<red>Игрок <yellow>%player% <red>не находится в бане!"
+  unban-success: "<green>Вы успешно сняли блокировку с игрока <white>%player%<green>!"
 
 time:
   permanent: "Навсегда"

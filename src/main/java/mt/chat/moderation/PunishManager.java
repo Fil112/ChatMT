@@ -1,8 +1,13 @@
 package mt.chat.moderation;
 
 import mt.chat.system.MonolithLoader;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import java.sql.Connection;
@@ -116,6 +121,9 @@ public class PunishManager {
         });
     }
 
+    /**
+     * Системное снятие бана по UUID (чистит кэш и удаляет из БД)
+     */
     public void unbanPlayer(UUID uuid) {
         bannedPlayers.remove(uuid);
 
@@ -129,6 +137,33 @@ public class PunishManager {
                 loader.getLoggerMT().error("Ошибка при удалении бана из БД: " + e.getMessage());
             }
         });
+    }
+
+    /**
+     * Снятие бана администратором по нику (вызывается из команды /unban)
+     */
+    public void unbanPlayer(CommandSender sender, String targetName) {
+        @SuppressWarnings("deprecation")
+        OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
+        UUID targetUUID = target.getUniqueId();
+
+        if (!isBanned(targetUUID)) {
+            String notBannedMsg = loader.getConfigManager().getMessages().getString(
+                    "punishments.not-banned",
+                    "<red>Игрок <yellow>%player% <red>не находится в бане!"
+            );
+            sendConverted(sender, notBannedMsg.replace("%player%", targetName));
+            return;
+        }
+
+        // Вызываем системный метод для очистки мапы и базы
+        unbanPlayer(targetUUID);
+
+        String unbanMsg = loader.getConfigManager().getMessages().getString(
+                "punishments.unban-success",
+                "<green>Игрок <white>%player% <green>был успешно разблокирован!"
+        );
+        sendConverted(sender, unbanMsg.replace("%player%", targetName));
     }
 
     public boolean isBanned(UUID uuid) {
@@ -147,6 +182,15 @@ public class PunishManager {
     // =====================================
     // 3. УТИЛИТЫ И ЗАГРУЗКА
     // =====================================
+
+    /**
+     * Конвертация MiniMessage в Legacy строку для отправки
+     */
+    private void sendConverted(CommandSender sender, String text) {
+        Component comp = MiniMessage.miniMessage().deserialize(text);
+        String legacyText = LegacyComponentSerializer.legacySection().serialize(comp);
+        sender.sendMessage(legacyText);
+    }
 
     /**
      * Подгрузка наказаний из БД.

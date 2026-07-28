@@ -13,16 +13,23 @@ commands:
     description: Отправить личное сообщение игроку
     aliases: [ m, tell, whisper, w ]
   reply:
-      description: Ответить на последнее сообщение игрока
-      aliases: [ r, respond ]
+    description: Ответить на последнее сообщение игрока
+    aliases: [ r, respond ]
   kick:
     description: Кикнуть игрока
+    permission: chatmt.punish.kick
   ban:
-      description: Забанить игрока
+    description: Забанить игрока
+    permission: chatmt.punish.ban
+  unban:
+    description: Снять блокировку с аккаунта игрока
+    permission: chatmt.punish.unban
   mute:
-      description: Замутить игрока
+    description: Замутить игрока
+    permission: chatmt.punish.mute
   unmute:
-      description: Снять мут с игрока
+    description: Снять мут с игрока
+    permission: chatmt.punish.unmute
   broadcast:
     description: Написать объявление на весь сервер для игроков
     aliases: [ bc, announce ]

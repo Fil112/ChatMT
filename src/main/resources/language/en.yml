@@ -29,6 +29,8 @@ system:
 punishments:
   default-reason: "Violation of server rules"
   ban-screen: "&c&lYOU ARE BANNED FROM THE SERVER\n\n&7Your account has been suspended.\n&7Ban expires in: &e%time%\n\n&8You can appeal in our Discord!"
+  not-banned: "<red>Player <yellow>%player% <red>is not banned!"
+  unban-success: "<green>You have successfully unbanned <white>%player%<green>!"
 
 time:
   permanent: "Permanent"

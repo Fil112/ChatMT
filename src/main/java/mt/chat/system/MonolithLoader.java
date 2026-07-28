@@ -124,6 +124,7 @@ public class MonolithLoader {
         PunishCmd punishCmd = new PunishCmd(this);
         plugin.getCommand("kick").setExecutor(punishCmd);
         plugin.getCommand("ban").setExecutor(punishCmd);
+        plugin.getCommand("unban").setExecutor(punishCmd);
         plugin.getCommand("mute").setExecutor(punishCmd);
         plugin.getCommand("unmute").setExecutor(punishCmd);
 

@@ -3,11 +3,13 @@ package mt.chat.database;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import mt.chat.system.MonolithLoader;
+import org.bukkit.Bukkit;
 
 import java.io.File;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.UUID;
 
 public class DatabaseManager {
 
@@ -104,6 +106,24 @@ public class DatabaseManager {
             throw new SQLException("База данных не инициализирована!");
         }
         return dataSource.getConnection();
+    }
+
+    /**
+     * Удаление бана игрока из базы данных (Асинхронно)
+     */
+    public void removeBan(UUID uuid) {
+        Bukkit.getScheduler().runTaskAsynchronously(loader.getPlugin(), () -> {
+            String query = "DELETE FROM chatmt_bans WHERE uuid = ?";
+            try (Connection conn = getConnection();
+                 PreparedStatement ps = conn.prepareStatement(query)) {
+
+                ps.setString(1, uuid.toString());
+                ps.executeUpdate();
+
+            } catch (SQLException e) {
+                loader.getPlugin().getLogger().severe("Ошибка при снятии бана из БД: " + e.getMessage());
+            }
+        });
     }
 
     // Корректное закрытие пула соединений при выключении плагина
