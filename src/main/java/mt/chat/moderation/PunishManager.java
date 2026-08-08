@@ -1,0 +1,373 @@
+package mt.chat.moderation;
+
+import mt.chat.system.MonolithLoader;
+import mt.chat.utils.ColorUtils;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+
+public class PunishManager {
+
+    private final MonolithLoader loader;
+
+    // Потокобезопасные коллекции для кэширования данных из БД
+    private final Map<UUID, Long> mutedPlayers = new ConcurrentHashMap<>();
+    private final Map<UUID, Integer> warnedPlayers = new ConcurrentHashMap<>();
+    private final Map<UUID, Long> bannedPlayers = new ConcurrentHashMap<>();
+
+    public PunishManager(MonolithLoader loader) {
+        this.loader = loader;
+    }
+
+    // =====================================
+    // 1. МУТЫ (MUTES)
+    // =====================================
+
+    public void mutePlayer(UUID uuid, long durationMillis, String adminName, String reason) {
+        long expires = (durationMillis == -1) ? -1L : System.currentTimeMillis() + durationMillis;
+        mutedPlayers.put(uuid, expires);
+
+        Bukkit.getScheduler().runTaskAsynchronously(loader.getPlugin(), () -> {
+            String sql = "REPLACE INTO chatmt_mutes (uuid, admin_name, reason, expires) VALUES (?, ?, ?, ?)";
+            try (Connection conn = loader.getDatabaseManager().getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, uuid.toString());
+                ps.setString(2, adminName);
+                ps.setString(3, reason);
+                ps.setLong(4, expires);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                loader.getLoggerMT().error("Ошибка при сохранении мута в БД: " + e.getMessage());
+            }
+        });
+    }
+
+    // Легаси-метод для обратной совместимости с внешним API и старыми модулями
+    public void mutePlayer(UUID uuid, long durationMillis) {
+        String defaultReason = loader.getConfigManager().getMessages().getString("punishments.default-reason", "Нарушение правил");
+        String consoleName = loader.getConfigManager().getMessages().getString("system.console-name", "Console");
+        mutePlayer(uuid, durationMillis, consoleName, defaultReason);
+    }
+
+    public void unmutePlayer(UUID uuid) {
+        mutedPlayers.remove(uuid);
+
+        Bukkit.getScheduler().runTaskAsynchronously(loader.getPlugin(), () -> {
+            String sql = "DELETE FROM chatmt_mutes WHERE uuid = ?";
+            try (Connection conn = loader.getDatabaseManager().getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, uuid.toString());
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                loader.getLoggerMT().error("Ошибка при удалении мута из БД: " + e.getMessage());
+            }
+        });
+    }
+
+    public boolean isMuted(UUID uuid) {
+        if (!mutedPlayers.containsKey(uuid)) return false;
+
+        long unMuteTime = mutedPlayers.get(uuid);
+        if (unMuteTime == -1) return true; // Перманент
+
+        if (System.currentTimeMillis() >= unMuteTime) {
+            unmutePlayer(uuid);
+            return false;
+        }
+        return true;
+    }
+
+    // =====================================
+    // 2. БАНЫ (BANS)
+    // =====================================
+
+    public void banPlayer(UUID uuid, long durationMillis, String adminName, String reason) {
+        long expires = (durationMillis == -1) ? -1L : System.currentTimeMillis() + durationMillis;
+        bannedPlayers.put(uuid, expires);
+
+        // Если игрок онлайн, кикаем его моментально в основном потоке
+        Player target = Bukkit.getPlayer(uuid);
+        if (target != null && target.isOnline()) {
+            Bukkit.getScheduler().runTask(loader.getPlugin(), () -> {
+                String rawMessage = loader.getConfigManager().getMessages().getString("punishments.ban-screen", "&cВы заблокированы!\n&7Истекает через: &e%time%");
+                String kickMessage = rawMessage.replace("%time%", getBanRemainingTime(uuid));
+                target.kickPlayer(ChatColor.translateAlternateColorCodes('&', kickMessage));
+            });
+        }
+
+        Bukkit.getScheduler().runTaskAsynchronously(loader.getPlugin(), () -> {
+            String sql = "REPLACE INTO chatmt_bans (uuid, admin_name, reason, expires) VALUES (?, ?, ?, ?)";
+            try (Connection conn = loader.getDatabaseManager().getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, uuid.toString());
+                ps.setString(2, adminName);
+                ps.setString(3, reason);
+                ps.setLong(4, expires);
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                loader.getLoggerMT().error("Ошибка при сохранении бана в БД: " + e.getMessage());
+            }
+        });
+    }
+
+    /**
+     * Системное снятие бана по UUID (чистит кэш и удаляет из БД)
+     */
+    public void unbanPlayer(UUID uuid) {
+        bannedPlayers.remove(uuid);
+
+        Bukkit.getScheduler().runTaskAsynchronously(loader.getPlugin(), () -> {
+            String sql = "DELETE FROM chatmt_bans WHERE uuid = ?";
+            try (Connection conn = loader.getDatabaseManager().getConnection();
+                 PreparedStatement ps = conn.prepareStatement(sql)) {
+                ps.setString(1, uuid.toString());
+                ps.executeUpdate();
+            } catch (SQLException e) {
+                loader.getLoggerMT().error("Ошибка при удалении бана из БД: " + e.getMessage());
+            }
+        });
+    }
+
+    /**
+     * Снятие бана администратором по нику (вызывается из команды /unban)
+     */
+    public void unbanPlayer(CommandSender sender, String targetName) {
+        @SuppressWarnings("deprecation")
+        OfflinePlayer target = Bukkit.getOfflinePlayer(targetName);
+        UUID targetUUID = target.getUniqueId();
+
+        if (!isBanned(targetUUID)) {
+            String notBannedMsg = loader.getConfigManager().getMessages().getString(
+                    "punishments.not-banned",
+                    "<red>Игрок <yellow>%player% <red>не находится в бане!"
+            );
+            sendConverted(sender, notBannedMsg.replace("%player%", targetName));
+            return;
+        }
+
+        // Вызываем системный метод для очистки мапы и базы
+        unbanPlayer(targetUUID);
+
+        String unbanMsg = loader.getConfigManager().getMessages().getString(
+                "punishments.unban-success",
+                "<green>Игрок <white>%player% <green>был успешно разблокирован!"
+        );
+        sendConverted(sender, unbanMsg.replace("%player%", targetName));
+    }
+
+    public boolean isBanned(UUID uuid) {
+        if (!bannedPlayers.containsKey(uuid)) return false;
+
+        long unBanTime = bannedPlayers.get(uuid);
+        if (unBanTime == -1) return true;
+
+        if (System.currentTimeMillis() >= unBanTime) {
+            unbanPlayer(uuid);
+            return false;
+        }
+        return true;
+    }
+
+    // =====================================
+    // 3. ВАРНЫ (WARNS)
+    // =====================================
+
+    public void warnPlayer(UUID uuid, String targetName) {
+        int currentWarns = warnedPlayers.getOrDefault(uuid, 0) + 1;
+        int maxWarns = loader.getConfigManager().getConfig().getInt("punishments.warn-limit", 3);
+
+        if (currentWarns >= maxWarns) {
+            // Лимит достигнут -> сбрасываем варны и выдаем системное наказание (мут на 2 часа)
+            warnedPlayers.remove(uuid);
+            Bukkit.getScheduler().runTaskAsynchronously(loader.getPlugin(), () -> {
+                String sql = "DELETE FROM chatmt_warns WHERE uuid = ?";
+                try (Connection conn = loader.getDatabaseManager().getConnection();
+                     PreparedStatement ps = conn.prepareStatement(sql)) {
+                    ps.setString(1, uuid.toString());
+                    ps.executeUpdate();
+                } catch (SQLException e) {
+                    loader.getLoggerMT().error("Ошибка при сбросе варнов в БД: " + e.getMessage());
+                }
+            });
+
+            // Выдаем мут в основном потоке
+            Bukkit.getScheduler().runTask(loader.getPlugin(), () -> {
+                long duration = 2 * 60 * 60 * 1000L; // 2 часа
+                mutePlayer(uuid, duration, "System", "Достигнут лимит варнов (" + maxWarns + ")");
+                String limitMsg = loader.getConfigManager().getMessages().getString("punishments.warn-limit-reached", "<dark_gray>[<red>!<dark_gray>] <white>%player% <gray>получил системный мут за превышение лимита предупреждений.");
+                Bukkit.broadcastMessage(ColorUtils.colorize(limitMsg.replace("%player%", targetName)));
+            });
+        } else {
+            // Просто сохраняем новый варн
+            warnedPlayers.put(uuid, currentWarns);
+            Bukkit.getScheduler().runTaskAsynchronously(loader.getPlugin(), () -> {
+                String sql = "REPLACE INTO chatmt_warns (uuid, warn_count) VALUES (?, ?)";
+                try (Connection conn = loader.getDatabaseManager().getConnection();
+                     PreparedStatement ps = conn.prepareStatement(sql)) {
+                    ps.setString(1, uuid.toString());
+                    ps.setInt(2, currentWarns);
+                    ps.executeUpdate();
+                } catch (SQLException e) {
+                    loader.getLoggerMT().error("Ошибка при сохранении варна в БД: " + e.getMessage());
+                }
+            });
+        }
+    }
+
+    public void unwarnPlayer(UUID uuid) {
+        int currentWarns = warnedPlayers.getOrDefault(uuid, 0);
+        if (currentWarns <= 0) return;
+
+        currentWarns--;
+
+        if (currentWarns == 0) {
+            warnedPlayers.remove(uuid);
+            Bukkit.getScheduler().runTaskAsynchronously(loader.getPlugin(), () -> {
+                String sql = "DELETE FROM chatmt_warns WHERE uuid = ?";
+                try (Connection conn = loader.getDatabaseManager().getConnection();
+                     PreparedStatement ps = conn.prepareStatement(sql)) {
+                    ps.setString(1, uuid.toString());
+                    ps.executeUpdate();
+                } catch (SQLException e) {
+                    loader.getLoggerMT().error("Ошибка при удалении варна из БД: " + e.getMessage());
+                }
+            });
+        } else {
+            warnedPlayers.put(uuid, currentWarns);
+            final int updatedWarns = currentWarns;
+            Bukkit.getScheduler().runTaskAsynchronously(loader.getPlugin(), () -> {
+                String sql = "REPLACE INTO chatmt_warns (uuid, warn_count) VALUES (?, ?)";
+                try (Connection conn = loader.getDatabaseManager().getConnection();
+                     PreparedStatement ps = conn.prepareStatement(sql)) {
+                    ps.setString(1, uuid.toString());
+                    ps.setInt(2, updatedWarns);
+                    ps.executeUpdate();
+                } catch (SQLException e) {
+                    loader.getLoggerMT().error("Ошибка при обновлении варна в БД: " + e.getMessage());
+                }
+            });
+        }
+    }
+
+    public int getWarns(UUID uuid) {
+        return warnedPlayers.getOrDefault(uuid, 0);
+    }
+
+    // =====================================
+    // 4. УТИЛИТЫ И ЗАГРУЗКА
+    // =====================================
+
+    /**
+     * Конвертация MiniMessage в Legacy строку для отправки
+     */
+    private void sendConverted(CommandSender sender, String text) {
+        Component comp = MiniMessage.miniMessage().deserialize(text);
+        String legacyText = LegacyComponentSerializer.legacySection().serialize(comp);
+        sender.sendMessage(legacyText);
+    }
+
+    /**
+     * Подгрузка наказаний из БД.
+     * Вызывать строго асинхронно, например в AsyncPlayerPreLoginEvent!
+     */
+    public void loadPlayerPunishments(UUID uuid) {
+        String muteSql = "SELECT expires FROM chatmt_mutes WHERE uuid = ?";
+        String banSql = "SELECT expires FROM chatmt_bans WHERE uuid = ?";
+        String warnSql = "SELECT warn_count FROM chatmt_warns WHERE uuid = ?";
+
+        try (Connection conn = loader.getDatabaseManager().getConnection()) {
+
+            try (PreparedStatement ps = conn.prepareStatement(muteSql)) {
+                ps.setString(1, uuid.toString());
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    long expires = rs.getLong("expires");
+                    if (expires == -1 || expires > System.currentTimeMillis()) {
+                        mutedPlayers.put(uuid, expires);
+                    } else {
+                        unmutePlayer(uuid);
+                    }
+                }
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(banSql)) {
+                ps.setString(1, uuid.toString());
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    long expires = rs.getLong("expires");
+                    if (expires == -1 || expires > System.currentTimeMillis()) {
+                        bannedPlayers.put(uuid, expires);
+                    } else {
+                        unbanPlayer(uuid);
+                    }
+                }
+            }
+
+            try (PreparedStatement ps = conn.prepareStatement(warnSql)) {
+                ps.setString(1, uuid.toString());
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    warnedPlayers.put(uuid, rs.getInt("warn_count"));
+                }
+            }
+        } catch (SQLException e) {
+            loader.getLoggerMT().error("Не удалось загрузить наказания для " + uuid.toString());
+        }
+    }
+
+    /**
+     * Очистка кэша наказаний при выходе игрока (PlayerQuitEvent)
+     */
+    public void unloadPlayer(UUID uuid) {
+        mutedPlayers.remove(uuid);
+        warnedPlayers.remove(uuid);
+        bannedPlayers.remove(uuid);
+    }
+
+    public String getMuteRemainingTime(UUID uuid) {
+        if (!mutedPlayers.containsKey(uuid)) return "";
+        return formatTime(mutedPlayers.get(uuid));
+    }
+
+    public String getBanRemainingTime(UUID uuid) {
+        if (!bannedPlayers.containsKey(uuid)) return "";
+        return formatTime(bannedPlayers.get(uuid));
+    }
+
+    private String formatTime(long expireTime) {
+        if (expireTime == -1) {
+            return loader.getConfigManager().getMessages().getString("time.permanent", "Навсегда");
+        }
+
+        long remainingMillis = expireTime - System.currentTimeMillis();
+        if (remainingMillis <= 0) {
+            return loader.getConfigManager().getMessages().getString("time.expired", "Истекло");
+        }
+
+        long seconds = (remainingMillis / 1000) % 60;
+        long minutes = (remainingMillis / (1000 * 60)) % 60;
+        long hours = (remainingMillis / (1000 * 60 * 60)) % 24;
+        long days = (remainingMillis / (1000 * 60 * 60 * 24));
+
+        if (days > 0) {
+            String formatDays = loader.getConfigManager().getMessages().getString("time.format-days", "%d дн. %02d ч. %02d мин.");
+            return String.format(formatDays, days, hours, minutes);
+        }
+
+        String formatHours = loader.getConfigManager().getMessages().getString("time.format-hours", "%02d ч. %02d мин. %02d сек.");
+        return String.format(formatHours, hours, minutes, seconds);
+    }
+}

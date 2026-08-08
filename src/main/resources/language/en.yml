@@ -1,0 +1,51 @@
+# ==========================================
+# ChatMT V2 - Messages & Formats
+# MiniMessage Support (HEX, gradients, clicks)
+# Author: MT Studio
+# ==========================================
+
+formats:
+  global: "<dark_gray>[<gradient:#ff5e62:#ff9966>G</gradient>] <gray>%player_name% <dark_gray>» <white><message>"
+  local: "<dark_gray>[<gradient:#56ab2f:#a8e063>L</gradient>] <gray>%player_name% <dark_gray>» <white><message>"
+  pm-send: "<gray>You -> %target%: <white><message>"
+  pm-receive: "<gray>%sender% -> You: <white><message>"
+  join: "<dark_gray>[<green>+<dark_gray>] <gray>%player_name% joined the server"
+  quit: "<dark_gray>[<red>-<dark_gray>] <gray>%player_name% left the server"
+  msg-usage: "<red>Usage: /msg <player> <message>"
+  reply-usage: "<red>Usage: /reply <message>"
+  chat-hover: "<gray>Click to send a private message"
+
+system:
+  no-permission: "<red>You don't have permission to execute this command!"
+  reload: "<green>ChatMT has been successfully reloaded!"
+  cooldown: "<red>Please don't type so fast! Wait a moment."
+  ad-blocked: "<red>Links and advertising are forbidden! Only official resources are allowed."
+  join-title: "<gradient:#ff5e62:#ff9966>Welcome</gradient>"
+  join-subtitle: "<gray>Enjoy your time on the server!"
+  console-name: "Console"
+  player-offline: "<gray>Player not found or is currently offline."
+  nobody-heard: "<gray>[<red>!<gray>] <red>Nobody heard you... Type <yellow>%prefix% <red>before your message for global chat."
+
+punishments:
+  default-reason: "Violation of server rules"
+  ban-screen: "&c&lYOU ARE BANNED FROM THE SERVER\n\n&7Your account has been suspended.\n&7Ban expires in: &e%time%\n\n&8You can appeal in our Discord!"
+  not-banned: "<red>Player <yellow>%player% <red>is not banned!"
+  unban-success: "<green>You have successfully unbanned <white>%player%<green>!"
+  warn-broadcast: "<dark_gray>[<red>!<dark_gray>] <white>%player% <gray>received a warning (<red>%current%/%max%<gray>). Reason: <white>%reason%"
+  warn-limit-reached: "<dark_gray>[<red>!<dark_gray>] <white>%player% <gray>received a system mute for exceeding the warning limit."
+  no-warns: "<red>Player <yellow>%player% <red>has no warnings!"
+  unwarn-success: "<green>You removed a warning from <white>%player%<green>. Remaining warnings: <white>%warns%"
+
+time:
+  permanent: "Permanent"
+  expired: "Expired"
+  # Use %d for days, %02d for hours/minutes/seconds (with leading zero)
+  format-days: "%d d. %02d h. %02d m."
+  format-hours: "%02d h. %02d m. %02d s."
+
+ignore:
+  added: "<green>Player <white>%target% <green>has been successfully blacklisted."
+  removed: "<yellow>Player <white>%target% <yellow>has been removed from the blacklist."
+  already-ignored: "<red>This player is already in your blacklist!"
+  cannot-ignore-self: "<red>You cannot ignore yourself."
+  you-are-ignored: "<red>Oops! This player has restricted access to their private messages for you."
