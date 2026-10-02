@@ -5,10 +5,7 @@ import mt.chat.ai.GeminiManager;
 import mt.chat.broadcast.AnnounceCmd;
 import mt.chat.broadcast.AutoBroadcaster;
 import mt.chat.database.DatabaseManager;
-import mt.chat.engine.ChatEngine;
-import mt.chat.engine.ChatFilters;
-import mt.chat.engine.MentionManager;
-import mt.chat.engine.PrivateMessages;
+import mt.chat.engine.*;
 import mt.chat.listeners.ChatListener;
 import mt.chat.listeners.CommandListener;
 import mt.chat.listeners.PlayerJoinListener;
@@ -40,6 +37,7 @@ public class MonolithLoader {
     private MentionManager mentionManager;
     private ChatEngine chatEngine;
     private AutoBroadcaster autoBroadcaster;
+    private ChatGamesManager chatGamesManager;
 
     public MonolithLoader(ChatMT plugin) {
         this.plugin = plugin;
@@ -83,6 +81,10 @@ public class MonolithLoader {
         this.autoBroadcaster = new AutoBroadcaster(this);
         this.autoBroadcaster.start();
 
+        plugin.getLogger().info(" -> Запуск модуля чат-игр...");
+        this.chatGamesManager = new ChatGamesManager(this);
+        this.chatGamesManager.start();
+
         plugin.getLogger().info(" -> Регистрация слушателей и команд...");
         registerListeners();
         registerCommands();
@@ -94,6 +96,11 @@ public class MonolithLoader {
         // Обязательно тушим таймер автоброадкастера, чтобы не было утечек при релоаде сервера
         if (this.autoBroadcaster != null) {
             this.autoBroadcaster.stop();
+        }
+
+        // Чат игры
+        if (this.chatGamesManager != null) {
+            this.chatGamesManager.stop();
         }
 
         // Корректно закрываем пулы соединений HikariCP
@@ -195,4 +202,6 @@ public class MonolithLoader {
     public AutoBroadcaster getAutoBroadcaster() {
         return autoBroadcaster;
     }
+
+    public ChatGamesManager getChatGamesManager() { return chatGamesManager; }
 }

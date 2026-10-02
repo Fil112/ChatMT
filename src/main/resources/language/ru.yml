@@ -67,3 +67,9 @@ deaths:
   suicide: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>свел счеты с жизнью"
   unknown: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>загадочно погиб"
   weapon-bare-hands: "кулаков"
+
+games:
+  math-question: "<dark_gray>[<gradient:#ffaa00:#ff5500>ИГРА</gradient><dark_gray>] <white>Решите пример: <yellow>%question% <gray>(напишите ответ в чат!)"
+  anagram-question: "<dark_gray>[<gradient:#ffaa00:#ff5500>ИГРА</gradient><dark_gray>] <white>Анаграмма: расшифруйте слово <yellow>%scrambled% <gray>(первый ответивший получит приз!)"
+  winner: "<dark_gray>[<gradient:#00ff88:#00b4d8>ПОБЕДА</gradient><dark_gray>] <white>Игрок <yellow>%player% <white>первым дал верный ответ: <green>%answer% <gray>(за %time% сек.)!"
+  timeout: "<dark_gray>[<red>ИГРА<dark_gray>] <gray>Время вышло! Никто не дал верный ответ. Было загадано: <yellow>%answer%"

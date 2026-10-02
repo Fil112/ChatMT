@@ -13,6 +13,11 @@ system:
   # Доступно / Available: ru, en
   language: "ru"
 
+features:
+  # [RU] Включение кастомных сообщений о смерти
+  # [EN] Enable custom death messages
+  death-messages: true
+
 ai:
   # [RU] Настройки интеграции с нейросетью Gemini
   # [EN] Gemini AI integration settings
@@ -43,11 +48,19 @@ chat:
     # [EN] Player mentions settings (@PlayerName)
     enabled: true
     color: "<yellow><bold>"
+    # [RU] Время бездействия в секундах до статуса AFK (180 = 3 минуты)
+    # [EN] Idle time in seconds before AFK status (180 = 3 minutes)
+    afk-seconds: 180
     # [RU] Настройка звука при упоминании (Оставьте пусто "", чтобы отключить)
     # [EN] Mention sound settings (Leave blank "" to disable)
     sound: "ENTITY_EXPERIENCE_ORB_PICKUP"
     volume: 1.0
     pitch: 1.2
+
+  hover-moderation:
+    # [RU] Кнопки быстрого наказания [М] [В] [К] перед сообщениями для администрации
+    # [EN] Quick moderation buttons [M] [W] [K] before messages for staff
+    enabled: true
 
 filters:
   caps:
@@ -101,6 +114,36 @@ broadcast:
     # Пример использования MiniMessage для кликабельной ссылки
     - "Нашли баг? Пишите в Discord: <click:open_url:'https://discord.gg/your_guild'><aqua><underlined>discord.gg/your_guild</underlined></aqua></click>"
     - "В магазине скидки! Пиши <click:run_command:'/donate'><hover:show_text:'<green>Нажми, чтобы открыть донат-меню!'><green>/donate</green></hover></click>"
+
+games:
+  # [RU] Автоматические чат-игры (математика и анаграммы)
+  # [EN] Automatic chat games (math and anagrams)
+  enabled: true
+  # [RU] Интервал запуска игр в секундах (240 = 4 минуты)
+  # [EN] Game interval in seconds (240 = 4 minutes)
+  interval: 240
+  # [RU] Минимальный онлайн для старта игры
+  # [EN] Minimum online players required to start a game
+  min-players: 2
+  # [RU] Время на ввод ответа в секундах
+  # [EN] Time allowed to answer in seconds
+  time-to-answer: 35
+  # [RU] Консольные команды наград победителя (%player% заменится на ник)
+  # [EN] Console reward commands (%player% will be replaced with name)
+  rewards:
+    - "eco give %player% 50"
+    - "give %player% gold_ingot 3"
+  # [RU] Список слов для режима «Анаграмма»
+  # [EN] Word list for the "Anagram" mode
+  words:
+    - "алмаз"
+    - "эндермен"
+    - "крипер"
+    - "незерит"
+    - "верстак"
+    - "обсидиан"
+    - "редстоун"
+    - "поршень"
 
 punishments:
   # [RU] Лимит предупреждений до автоматического наказания

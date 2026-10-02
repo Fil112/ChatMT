@@ -68,3 +68,9 @@ deaths:
   suicide: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>took their own life"
   unknown: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>died mysteriously"
   weapon-bare-hands: "bare hands"
+
+games:
+  math-question: "<dark_gray>[<gradient:#ffaa00:#ff5500>GAME</gradient><dark_gray>] <white>Solve the math problem: <yellow>%question% <gray>(type answer in chat!)"
+  anagram-question: "<dark_gray>[<gradient:#ffaa00:#ff5500>GAME</gradient><dark_gray>] <white>Anagram: unshuffle the word <yellow>%scrambled% <gray>(first to answer wins!)"
+  winner: "<dark_gray>[<gradient:#00ff88:#00b4d8>VICTORY</gradient><dark_gray>] <white>Player <yellow>%player% <white>was first to answer correctly: <green>%answer% <gray>(in %time%s)!"
+  timeout: "<dark_gray>[<red>GAME<dark_gray>] <gray>Time is up! Nobody answered correctly. The answer was: <yellow>%answer%"
