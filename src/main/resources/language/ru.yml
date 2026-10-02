@@ -14,6 +14,7 @@ formats:
   msg-usage: "<red>Использование: /msg <ник> <сообщение>"
   reply-usage: "<red>Использование: /reply <сообщение>"
   chat-hover: "<gray>Нажмите, чтобы написать в ЛС"
+  afk-notice: "<dark_gray>[<yellow>!<dark_gray>] <gray>Игрок <yellow>%target% <gray>сейчас отошел (AFK), он может ответить не сразу."
 system:
   no-permission: "<red>У вас нет прав для выполнения этой команды!"
   reload: "<green>ChatMT успешно перезагружен!"
@@ -34,6 +35,9 @@ punishments:
   warn-limit-reached: "<dark_gray>[<red>!<dark_gray>] <white>%player% <gray>получил системный мут за превышение лимита предупреждений."
   no-warns: "<red>У игрока <yellow>%player% <red>нет предупреждений!"
   unwarn-success: "<green>Вы сняли предупреждение с <white>%player%<green>. Осталось варнов: <white>%warns%"
+  hover-mute: "<red>Нажмите, чтобы замутить игрока"
+  hover-warn: "<yellow>Нажмите, чтобы выдать варн"
+  hover-kick: "<dark_red>Нажмите, чтобы кикнуть игрока"
 
 time:
   permanent: "Навсегда"
@@ -48,3 +52,18 @@ ignore:
   already-ignored: "<red>Этот игрок уже находится в вашем черном списке!"
   cannot-ignore-self: "<red>Вы не можете добавить в игнор самого себя."
   you-are-ignored: "<red>Упс! Этот игрок ограничил доступ к своим личным сообщениям для вас."
+
+deaths:
+  pvp: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>был убит игроком <yellow>%killer% <gray>при помощи <white>%weapon%"
+  mob: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>пал от лап <yellow>%killer%"
+  fall: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>разбился вдребезги"
+  drowning: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>утонул"
+  lava: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>решил искупаться в лаве"
+  fire: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>сгорел заживо"
+  void: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>упал в бездну"
+  explosion: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>был разорван на куски взрывом"
+  starvation: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>умер от истощения"
+  magic: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>погиб от темной магии"
+  suicide: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>свел счеты с жизнью"
+  unknown: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>загадочно погиб"
+  weapon-bare-hands: "кулаков"

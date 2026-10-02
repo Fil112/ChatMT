@@ -15,6 +15,7 @@ import mt.chat.listeners.PlayerJoinListener;
 import mt.chat.moderation.*;
 import mt.chat.utils.LoggerMT;
 import mt.chat.utils.SpyManager;
+import mt.chat.listeners.DeathListener;
 import org.bukkit.plugin.PluginManager;
 
 public class MonolithLoader {
@@ -107,6 +108,7 @@ public class MonolithLoader {
         pm.registerEvents(new ChatListener(this), plugin);
         pm.registerEvents(new CommandListener(this), plugin);
         pm.registerEvents(new PlayerJoinListener(this), plugin);
+        pm.registerEvents(new DeathListener(this), plugin);
     }
 
     private void registerCommands() {

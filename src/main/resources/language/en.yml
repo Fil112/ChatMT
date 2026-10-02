@@ -25,6 +25,7 @@ system:
   console-name: "Console"
   player-offline: "<gray>Player not found or is currently offline."
   nobody-heard: "<gray>[<red>!<gray>] <red>Nobody heard you... Type <yellow>%prefix% <red>before your message for global chat."
+  afk-notice: "<dark_gray>[<yellow>!<dark_gray>] <gray>Player <yellow>%target% <gray>is currently AFK and might not answer immediately."
 
 punishments:
   default-reason: "Violation of server rules"
@@ -35,6 +36,9 @@ punishments:
   warn-limit-reached: "<dark_gray>[<red>!<dark_gray>] <white>%player% <gray>received a system mute for exceeding the warning limit."
   no-warns: "<red>Player <yellow>%player% <red>has no warnings!"
   unwarn-success: "<green>You removed a warning from <white>%player%<green>. Remaining warnings: <white>%warns%"
+  hover-mute: "<red>Click to mute this player"
+  hover-warn: "<yellow>Click to warn this player"
+  hover-kick: "<dark_red>Click to kick this player"
 
 time:
   permanent: "Permanent"
@@ -49,3 +53,18 @@ ignore:
   already-ignored: "<red>This player is already in your blacklist!"
   cannot-ignore-self: "<red>You cannot ignore yourself."
   you-are-ignored: "<red>Oops! This player has restricted access to their private messages for you."
+
+deaths:
+  pvp: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>was slain by <yellow>%killer% <gray>using <white>%weapon%"
+  mob: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>was killed by <yellow>%killer%"
+  fall: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>hit the ground too hard"
+  drowning: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>drowned"
+  lava: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>tried to swim in lava"
+  fire: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>went up in flames"
+  void: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>fell into the void"
+  explosion: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>blew up"
+  starvation: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>starved to death"
+  magic: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>was killed by magic"
+  suicide: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>took their own life"
+  unknown: "<dark_gray>[<red>☠<dark_gray>] <red>%victim% <gray>died mysteriously"
+  weapon-bare-hands: "bare hands"
