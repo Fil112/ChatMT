@@ -1,7 +1,7 @@
 package mt.chat.system;
 
 import mt.chat.ChatMT;
-import mt.chat.ai.GeminiManager;
+import mt.chat.ai.AiManager;
 import mt.chat.broadcast.AnnounceCmd;
 import mt.chat.broadcast.AutoBroadcaster;
 import mt.chat.database.DatabaseManager;
@@ -9,10 +9,11 @@ import mt.chat.engine.*;
 import mt.chat.listeners.ChatListener;
 import mt.chat.listeners.CommandListener;
 import mt.chat.listeners.PlayerJoinListener;
+import mt.chat.listeners.DeathListener;
 import mt.chat.moderation.*;
+import mt.chat.network.NetworkManager;
 import mt.chat.utils.LoggerMT;
 import mt.chat.utils.SpyManager;
-import mt.chat.listeners.DeathListener;
 import org.bukkit.plugin.PluginManager;
 
 public class MonolithLoader {
@@ -22,7 +23,7 @@ public class MonolithLoader {
     // --- Базовые менеджеры ---
     private ConfigManager configManager;
     private LoggerMT loggerMT;
-    private GeminiManager geminiManager;
+    private AiManager aiManager;
     private DatabaseManager databaseManager;
 
     // --- Модерация и фильтры ---
@@ -40,6 +41,9 @@ public class MonolithLoader {
     private ChatGamesManager chatGamesManager;
     private ChannelManager channelManager;
 
+    // --- Network (Bungee/Velocity) ---
+    private NetworkManager networkManager;
+
     public MonolithLoader(ChatMT plugin) {
         this.plugin = plugin;
     }
@@ -55,8 +59,8 @@ public class MonolithLoader {
         plugin.getLogger().info(" -> Запуск логгера...");
         this.loggerMT = new LoggerMT(this);
 
-        plugin.getLogger().info(" -> Подключение ИИ (Gemini)...");
-        this.geminiManager = new GeminiManager(this);
+        plugin.getLogger().info(" -> Подключение ИИ-модуля (Universal / Gemini / Local)...");
+        this.aiManager = new AiManager(this);
 
         plugin.getLogger().info(" -> Подключение фильтров модерации...");
         this.chatFilters = new ChatFilters(this);
@@ -74,6 +78,10 @@ public class MonolithLoader {
 
         plugin.getLogger().info(" -> Запуск системы упоминаний...");
         this.mentionManager = new MentionManager(this);
+
+        plugin.getLogger().info(" -> Подключение сетевого моста Bungee/Velocity...");
+        this.networkManager = new NetworkManager(this);
+        this.networkManager.register();
 
         plugin.getLogger().info(" -> Подключение движка чата...");
         this.chatEngine = new ChatEngine(this);
@@ -97,19 +105,20 @@ public class MonolithLoader {
     public void shutdown() {
         plugin.getLogger().info(" -> Остановка процессов ChatMT...");
 
-        // Обязательно тушим таймер автоброадкастера, чтобы не было утечек при релоаде сервера
         if (this.autoBroadcaster != null) {
             this.autoBroadcaster.stop();
         }
 
-        // Чат игры
         if (this.chatGamesManager != null) {
             this.chatGamesManager.stop();
         }
 
-        // Корректно закрываем пулы соединений HikariCP
         if (this.databaseManager != null) {
             this.databaseManager.disconnect();
+        }
+
+        if (this.networkManager != null) {
+            this.networkManager.unregister();
         }
     }
 
@@ -123,7 +132,7 @@ public class MonolithLoader {
     }
 
     private void registerCommands() {
-        // Главная команда
+        // Главная команда управления
         MtCmd mtCmd = new MtCmd(this);
         plugin.getCommand("mt").setExecutor(mtCmd);
         plugin.getCommand("mt").setTabCompleter(mtCmd);
@@ -133,7 +142,7 @@ public class MonolithLoader {
         plugin.getCommand("msg").setExecutor(pm);
         plugin.getCommand("reply").setExecutor(pm);
 
-        // Наказания
+        // Команды модерации
         PunishCmd punishCmd = new PunishCmd(this);
         plugin.getCommand("kick").setExecutor(punishCmd);
         plugin.getCommand("ban").setExecutor(punishCmd);
@@ -143,12 +152,12 @@ public class MonolithLoader {
         plugin.getCommand("warn").setExecutor(punishCmd);
         plugin.getCommand("unwarn").setExecutor(punishCmd);
 
-        // Объявления
+        // Оповещения
         plugin.getCommand("broadcast").setExecutor(new AnnounceCmd());
     }
 
     // =========================================================
-    // Геттеры для доступа ко всем модулям из любой точки плагина
+    // Геттеры модулей
     // =========================================================
 
     public ChatMT getPlugin() {
@@ -167,8 +176,13 @@ public class MonolithLoader {
         return loggerMT;
     }
 
-    public GeminiManager getGeminiManager() {
-        return geminiManager;
+    public AiManager getAiManager() {
+        return aiManager;
+    }
+
+    // Оставляем для совместимости
+    public AiManager getGeminiManager() {
+        return aiManager;
     }
 
     public ChatFilters getChatFilters() {
@@ -207,7 +221,15 @@ public class MonolithLoader {
         return autoBroadcaster;
     }
 
-    public ChatGamesManager getChatGamesManager() { return chatGamesManager; }
+    public ChatGamesManager getChatGamesManager() {
+        return chatGamesManager;
+    }
 
-    public ChannelManager getChannelManager() { return channelManager; }
+    public ChannelManager getChannelManager() {
+        return channelManager;
+    }
+
+    public NetworkManager getNetworkManager() {
+        return networkManager;
+    }
 }

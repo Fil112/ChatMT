@@ -18,7 +18,7 @@ import java.util.UUID;
 public class PrivateMessages implements CommandExecutor {
 
     private final MonolithLoader loader;
-    // Храним историю: кто кому писал последним, чтобы работала команда /reply
+    // Храним историю переписки для /reply
     private final Map<UUID, UUID> lastConversations = new HashMap<>();
 
     public PrivateMessages(MonolithLoader loader) {
@@ -42,8 +42,27 @@ public class PrivateMessages implements CommandExecutor {
                 return true;
             }
 
+            // Безопасное склеивание сообщения из аргументов
+            StringBuilder messageBuilder = new StringBuilder();
+            for (int i = 1; i < args.length; i++) {
+                messageBuilder.append(args[i]).append(" ");
+            }
+            String message = messageBuilder.toString().trim();
+
             Player target = Bukkit.getPlayer(args[0]);
+
+            // Если игрок оффлайн на текущем сервере — пробуем отправить через сеть BMT
             if (target == null || !target.isOnline()) {
+                if (loader.getNetworkManager() != null && loader.getNetworkManager().isSyncPm()) {
+                    String cleanMessage = loader.getAntiSwear().filterSwear(player, message);
+                    loader.getNetworkManager().sendPrivateMessage(player, args[0], cleanMessage);
+
+                    if (loader.getLoggerMT() != null) {
+                        loader.getLoggerMT().logPrivateMessage(player.getName(), args[0], cleanMessage);
+                    }
+                    return true;
+                }
+
                 String offlineMsg = loader.getConfigManager().getMessages().getString("system.player-offline", "<gray>Игрок не найден или оффлайн.");
                 sendConverted(player, offlineMsg);
                 return true;
@@ -53,13 +72,6 @@ public class PrivateMessages implements CommandExecutor {
                 sendConverted(player, "<gray>Нельзя писать самому себе.");
                 return true;
             }
-
-            // Безопасное склеивание сообщения из аргументов
-            StringBuilder messageBuilder = new StringBuilder();
-            for (int i = 1; i < args.length; i++) {
-                messageBuilder.append(args[i]).append(" ");
-            }
-            String message = messageBuilder.toString().trim();
 
             sendMessage(player, target, message);
             return true;
@@ -95,7 +107,7 @@ public class PrivateMessages implements CommandExecutor {
     }
 
     private void sendMessage(Player sender, Player target, String message) {
-        // 1. Проверка системы игноров (отменяем отправку, если мы в ЧС)
+        // 1. Проверка игнора
         if (loader.getIgnoreManager().isIgnored(target.getUniqueId(), sender.getUniqueId())) {
             String ignoredMsg = loader.getConfigManager().getMessages().getString(
                     "ignore.you-are-ignored",
@@ -105,14 +117,13 @@ public class PrivateMessages implements CommandExecutor {
             return;
         }
 
-        // 2. Пропускаем текст через умный антимат
+        // 2. Антимат
         message = loader.getAntiSwear().filterSwear(sender, message);
 
-        // 3. Форматируем сообщения (MiniMessage)
+        // 3. Форматирование
         String formatTo = loader.getConfigManager().getMessages().getString("formats.pm-send", "<gray>Вы -> %target%: <white>%message%");
         String formatFrom = loader.getConfigManager().getMessages().getString("formats.pm-receive", "<gray>%sender% -> Вам: <white>%message%");
 
-        // Заменяем плейсхолдеры
         String finalTo = formatTo.replace("%target%", target.getName())
                 .replace("%message%", message)
                 .replace("<message>", message);
@@ -125,25 +136,21 @@ public class PrivateMessages implements CommandExecutor {
         sendConverted(sender, finalTo);
         sendConverted(target, finalFrom);
 
-        // 5. Обновляем историю переписки для команды /reply
+        // 5. Обновляем диалог для /reply
         lastConversations.put(sender.getUniqueId(), target.getUniqueId());
         lastConversations.put(target.getUniqueId(), sender.getUniqueId());
 
-        // 6. Отправка в шпионскую систему для админов (Social Spy)
+        // 6. Social Spy
         if (loader.getSpyManager() != null) {
             loader.getSpyManager().sendSocialSpyLog(sender, target, message);
         }
 
-        // 7. Логируем в файл
+        // 7. Логгер
         if (loader.getLoggerMT() != null) {
             loader.getLoggerMT().logPrivateMessage(sender.getName(), target.getName(), message);
         }
     }
 
-    /**
-     * Вспомогательный метод для перевода MiniMessage Component в строку,
-     * понятную ванильному ядру Spigot.
-     */
     private void sendConverted(Player player, String miniMessageText) {
         Component comp = MiniMessage.miniMessage().deserialize(miniMessageText);
         String legacyText = LegacyComponentSerializer.legacySection().serialize(comp);

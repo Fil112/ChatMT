@@ -1,6 +1,8 @@
 package mt.chat.listeners;
 
+import mt.chat.ai.AiManager;
 import mt.chat.system.MonolithLoader;
+import mt.chat.utils.ColorUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -24,7 +26,7 @@ public class ChatListener implements Listener {
         Player player = event.getPlayer();
         String message = event.getMessage();
 
-        // 0. Проверка на мут (используем конфиги и MiniMessage)
+        // 0. Проверка на активный мут игрока
         if (loader.getPunishManager().isMuted(player.getUniqueId())) {
             event.setCancelled(true);
             String muteMsg = loader.getConfigManager().getMessages().getString(
@@ -33,52 +35,63 @@ public class ChatListener implements Listener {
             );
             String timeLeft = loader.getPunishManager().getMuteRemainingTime(player.getUniqueId());
 
-            // Конвертируем для Spigot
             Component comp = MiniMessage.miniMessage().deserialize(muteMsg.replace("%time%", timeLeft));
             player.sendMessage(LegacyComponentSerializer.legacySection().serialize(comp));
             return;
         }
 
-        // 1. Проверка на обращение к ИИ (Gemini)
-        boolean aiEnabled = loader.getConfigManager().getConfig().getBoolean("ai.gemini.enabled", true);
-        String trigger = loader.getConfigManager().getConfig().getString("ai.gemini.trigger", "Бот,");
+        // 1. Проверка на вызов ИИ-ассистента
+        AiManager ai = loader.getAiManager();
+        if (ai != null && ai.isEnabled()) {
+            String trigger = ai.getTrigger();
+            if (message.toLowerCase().startsWith(trigger.toLowerCase())) {
+                event.setCancelled(true);
 
-        if (aiEnabled && message.toLowerCase().startsWith(trigger.toLowerCase())) {
-            event.setCancelled(true);
-            if (loader.getChatFilters().isSpamming(player)) return; // Защита ИИ от спама
+                // Защищаем API от флуда
+                if (loader.getChatFilters().isSpamming(player)) return;
 
-            String prompt = message.substring(trigger.length()).trim();
-            if (!prompt.isEmpty()) {
-                player.sendMessage("§7§o[Gemini] Думаю над ответом...");
-                loader.getGeminiManager().askGemini(prompt, response -> {
-                    Bukkit.getScheduler().runTask(loader.getPlugin(), () -> {
-                        Bukkit.broadcastMessage("§8[§bGemini§8] §f" + response);
+                String prompt = message.substring(trigger.length()).trim();
+                if (!prompt.isEmpty()) {
+                    String thinkingMsg = loader.getConfigManager().getMessages().getString(
+                            "ai.thinking",
+                            "<gray><i>[ИИ] Думаю над ответом...</i>"
+                    );
+                    player.sendMessage(ColorUtils.colorize(thinkingMsg));
+
+                    ai.askAi(prompt, response -> {
+                        Bukkit.getScheduler().runTask(loader.getPlugin(), () -> {
+                            String format = loader.getConfigManager().getMessages().getString(
+                                    "ai.format",
+                                    "<dark_gray>[<gradient:#00f2fe:#4facfe>ИИ</gradient><dark_gray>] <white>%response%"
+                            );
+                            Bukkit.broadcastMessage(ColorUtils.colorize(format.replace("%response%", response)));
+                        });
                     });
-                });
+                }
+                return;
             }
-            return;
         }
 
-        // 2. Анти-Спам
+        // 2. Анти-Спам кулдаун
         if (loader.getChatFilters().isSpamming(player)) {
             event.setCancelled(true);
             return;
         }
 
-        // 3. Анти-Реклама
+        // 3. Фильтр ссылок и рекламы
         if (loader.getAntiAdvertising().hasAds(player, message)) {
             event.setCancelled(true);
             return;
         }
 
-        // 4. Анти-Мат (цензурит текст)
+        // 4. Антимат (чистим обходы и цензурим)
         message = loader.getAntiSwear().filterSwear(player, message);
 
-        // 5. Анти-Капс (понижает регистр, если нужно)
+        // 5. Антикапс
         String safeMessage = loader.getChatFilters().applyAntiCaps(player, message);
         event.setMessage(safeMessage);
 
-        // 6. Отправляем в ядро чата для парсинга градиентов и радиуса
+        // 6. Передаем в ChatEngine (каналы, локал/глобал, ховеры)
         loader.getChatEngine().processChat(event);
     }
 }

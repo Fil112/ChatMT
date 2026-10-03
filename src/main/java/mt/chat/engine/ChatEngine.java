@@ -31,7 +31,7 @@ public class ChatEngine {
 
         event.setCancelled(true);
 
-        // 1. ПРОВЕРКА НА СПЕЦИАЛЬНЫЕ КАНАЛЫ (#торговля, #help, #staff)
+        // 1. Проверка тематических веток (#торговля, #help, #staff)
         if (loader.getChannelManager() != null) {
             ChatChannel channel = loader.getChannelManager().findChannel(originalMessage);
             if (channel != null) {
@@ -40,7 +40,7 @@ public class ChatEngine {
             }
         }
 
-        // 2. ОБЫЧНЫЙ ЛОКАЛЬНЫЙ / ГЛОБАЛЬНЫЙ ЧАТ
+        // 2. Локальный / Глобальный чат
         int localRadius = loader.getConfigManager().getConfig().getInt("chat.local-radius", 100);
         String globalPrefix = loader.getConfigManager().getConfig().getString("chat.global-prefix", "!");
 
@@ -63,11 +63,7 @@ public class ChatEngine {
         dispatchMessage(sender, originalMessage, finalMessage, format, isGlobal, localRadius, "[Chat]");
     }
 
-    /**
-     * Обработка отправки сообщения в тематический канал
-     */
     private void handleChannelMessage(Player sender, ChatChannel channel, String rawMessage) {
-        // Проверка прав на канал
         if (channel.getPermission() != null && !channel.getPermission().isEmpty()) {
             if (!sender.hasPermission(channel.getPermission())) {
                 String noPermMsg = loader.getConfigManager().getMessages().getString(
@@ -86,13 +82,14 @@ public class ChatEngine {
 
         boolean isGlobal = (channel.getRadius() <= 0);
         dispatchMessage(sender, rawMessage, messageContent, channel.getFormat(), isGlobal, channel.getRadius(), "[" + channel.getId() + "]");
+
+        // Отправка в сеть BMT для персонала
+        if (channel.getId().equalsIgnoreCase("staff") && loader.getNetworkManager() != null && loader.getNetworkManager().isSyncStaff()) {
+            loader.getNetworkManager().sendStaffChat(sender.getName(), messageContent);
+        }
     }
 
-    /**
-     * Универсальная рассылка, форматирование MiniMessage, Hover-кнопки и проверка игноров
-     */
     private void dispatchMessage(Player sender, String originalRaw, String textToSend, String formatTemplate, boolean isGlobal, int radius, String logPrefix) {
-        // Интерактивный ник
         String hoverText = loader.getConfigManager().getMessages().getString(
                 "formats.chat-hover",
                 "<gray>Нажмите, чтобы написать в ЛС"
@@ -104,19 +101,16 @@ public class ChatEngine {
 
         String format = formatTemplate.replace("%player_name%", interactiveName);
 
-        // PlaceholderAPI
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             format = PlaceholderAPI.setPlaceholders(sender, format);
         }
 
-        // Упоминания
         if (loader.getMentionManager() != null) {
             textToSend = loader.getMentionManager().processMentions(sender, textToSend);
         }
 
         format = format.replace("<message>", textToSend).replace("%message%", textToSend);
 
-        // Формирование MiniMessage
         Component parsedComponent = miniMessage.deserialize(format);
         String readyMessage = legacySerializer.serialize(parsedComponent);
 
@@ -128,7 +122,6 @@ public class ChatEngine {
             staffReadyMessage = legacySerializer.serialize(staffComponent);
         }
 
-        // Рассылка
         if (isGlobal) {
             for (Player p : Bukkit.getOnlinePlayers()) {
                 if (p.equals(sender) || !loader.getIgnoreManager().isIgnored(p.getUniqueId(), sender.getUniqueId())) {
@@ -140,6 +133,11 @@ public class ChatEngine {
                 }
             }
             Bukkit.getConsoleSender().sendMessage(logPrefix + " " + readyMessage);
+
+            // В сеть отправляем только чистый глобальный чат
+            if (logPrefix.equals("[Chat]") && loader.getNetworkManager() != null && loader.getNetworkManager().isSyncGlobal()) {
+                loader.getNetworkManager().sendGlobalChat(sender.getName(), textToSend);
+            }
         } else {
             int receiversCount = 0;
             for (Player p : sender.getWorld().getPlayers()) {
@@ -168,7 +166,6 @@ public class ChatEngine {
             }
         }
 
-        // Логгер
         if (loader.getLoggerMT() != null) {
             loader.getLoggerMT().logChat(sender.getName(), originalRaw, isGlobal);
         }

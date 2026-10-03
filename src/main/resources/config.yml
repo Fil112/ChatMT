@@ -19,15 +19,88 @@ features:
   death-messages: true
 
 ai:
-  # [RU] Настройки интеграции с нейросетью Gemini
-  # [EN] Gemini AI integration settings
+  # [RU] Включение ИИ-ассистента в чате
+  # [EN] Enable in-game AI assistant
+  enabled: true
+
+  # [RU] Триггер, на который реагирует бот (в начале сообщения)
+  # [EN] Trigger phrase in chat
+  trigger: "Бот,"
+
+  # [RU] Выбор активного провайдера:
+  #      - "gemini"            : Прямой API Google Gemini
+  #      - "openai-compatible" : Универсальный режим (DeepSeek, Grok, OpenAI, OpenRouter)
+  #      - "local"             : Локальные нейросети БЕЗ интернета (Ollama, LM Studio)
+  #      - "claude"            : Прямой API Anthropic Claude
+  # [EN] Provider selection: gemini, openai-compatible, local, claude
+  provider: "gemini"
+
+  # [RU] Системный промпт (характер бота, контекст сервера и правила общения)
+  # [EN] System prompt defining persona and tone
+  system-prompt: "Ты умный и дружелюбный ассистент на сервере Minecraft MT. Отвечай кратко, емко (максимум 2-3 предложения), без лишней воды и строго по делу."
+
+  # [RU] Креативность ответов от 0.0 до 1.0 (чем ниже, тем точнее и строже)
+  # [EN] Temperature from 0.0 to 1.0
+  temperature: 0.7
+
+  # [RU] Лимит токенов на ответ, чтобы не забивать чат длинным текстом
+  # [EN] Max tokens limit
+  max-tokens: 250
+
+  # ==============================================================================
+  # 1. НАСТРОЙКИ GOOGLE GEMINI (если provider: "gemini")
+  # ==============================================================================
   gemini:
-    enabled: true
+    # [RU] API-ключ от Google AI Studio
+    # [EN] API key from Google AI Studio
     api-key: "ВСТАВЬ_СЮДА_СВОЙ_КЛЮЧ / INSERT_YOUR_KEY_HERE"
+
+    # [RU] Модель Gemini (например: gemini-3.5-flash-lite, gemini-2.5-flash, gemini-1.5-pro)
+    # [EN] Gemini model identifier
     model: "gemini-3.5-flash-lite"
-    # [RU] Триггер, на который будет реагировать бот
-    # [EN] Trigger word for the bot
-    trigger: "Бот,"
+
+  # ==============================================================================
+  # 2. УНИВЕРСАЛЬНЫЙ РЕЖИМ И ЛОКАЛЬНЫЙ ИИ (если provider: "openai-compatible" / "local")
+  # ==============================================================================
+  # ПРИМЕРЫ ДЛЯ БЫСТРОГО ПЕРЕКЛЮЧЕНИЯ:
+  #
+  # • DEEPSEEK:
+  #   endpoint: "https://api.deepseek.com/v1/chat/completions"
+  #   model: "deepseek-chat"
+  #
+  # • OLLAMA (Локально на сервере БЕЗ ИНТЕРНЕТА):
+  #   endpoint: "http://localhost:11434/v1/chat/completions"
+  #   model: "llama3:8b" # или qwen2.5:7b, mistral
+  #   api-key: "" # ключ не требуется
+  #
+  # • LM STUDIO (Локально с GUI):
+  #   endpoint: "http://localhost:1234/v1/chat/completions"
+  #   model: "local-model"
+  #   api-key: ""
+  #
+  # • OPENAI / GROK:
+  #   endpoint: "https://api.openai.com/v1/chat/completions"
+  #   model: "gpt-4o-mini" # или grok-2-latest
+  # ==============================================================================
+  universal:
+    # [RU] URL эндпоинта для OpenAI-совместимых запросов
+    # [EN] Endpoint URL for OpenAI-compatible requests
+    endpoint: "https://api.deepseek.com/v1/chat/completions"
+
+    # [RU] API-ключ (для локальных Ollama / LM Studio оставь пустым "")
+    # [EN] API key (leave blank "" for local Ollama / LM Studio)
+    api-key: "ВСТАВЬ_СЮДА_СВОЙ_КЛЮЧ"
+
+    # [RU] Имя модели
+    # [EN] Model identifier
+    model: "deepseek-chat"
+
+  # ==============================================================================
+  # 3. ANTHROPIC CLAUDE (если provider: "claude")
+  # ==============================================================================
+  claude:
+    api-key: "ВСТАВЬ_СЮДА_СВОЙ_КЛЮЧ"
+    model: "claude-3-5-sonnet-20241022"
 
 chat:
   # [RU] Радиус локального чата (в блоках). Если -1, то радиус отключен
@@ -188,6 +261,28 @@ punishments:
   # [RU] Время системного мута при достижении лимита варнов (в секундах, 7200 = 2 часа)
   # [EN] System mute duration when warn limit is reached (in seconds)
   warn-mute-duration: 7200
+
+network:
+  # [RU] Включение связи между серверами через BungeeCord / Velocity
+  # [EN] Enable cross-server sync via BungeeCord / Velocity
+  enabled: true
+  # [RU] Уникальное название текущего сервера (отображается в глобале)
+  # [EN] Unique name of this server
+  server-name: "survival-1"
+  # [RU] Синхронизировать глобальный чат
+  # [EN] Sync global chat across servers
+  sync-global: true
+  # [RU] Синхронизировать персонал-чат (#staff)
+  # [EN] Sync staff chat (#staff) across servers
+  sync-staff: true
+  # [RU] Синхронизировать личные сообщения /msg
+  # [EN] Sync private messages /msg across servers
+  sync-pm: true
+
+  # [RU] Форматы отображения сообщений с соседних серверов
+  # [EN] Format for messages coming from remote servers
+  format-global: "<dark_gray>[<gradient:#00c6ff:#0072ff>%server%</gradient><dark_gray>] [<gold>G<dark_gray>] <gray>%player% <dark_gray>» <white>%message%"
+  format-staff: "<dark_gray>[<red>Staff<dark_gray>|<aqua>%server%<dark_gray>] <gray>%player% <dark_gray>» <red>%message%"
 
 database:
   # [RU] Тип базы данных: sqlite или mysql
