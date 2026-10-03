@@ -2,6 +2,7 @@ package mt.chat.engine;
 
 import me.clip.placeholderapi.PlaceholderAPI;
 import mt.chat.system.MonolithLoader;
+import mt.chat.utils.ColorUtils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
@@ -30,6 +31,16 @@ public class ChatEngine {
 
         event.setCancelled(true);
 
+        // 1. ПРОВЕРКА НА СПЕЦИАЛЬНЫЕ КАНАЛЫ (#торговля, #help, #staff)
+        if (loader.getChannelManager() != null) {
+            ChatChannel channel = loader.getChannelManager().findChannel(originalMessage);
+            if (channel != null) {
+                handleChannelMessage(sender, channel, originalMessage);
+                return;
+            }
+        }
+
+        // 2. ОБЫЧНЫЙ ЛОКАЛЬНЫЙ / ГЛОБАЛЬНЫЙ ЧАТ
         int localRadius = loader.getConfigManager().getConfig().getInt("chat.local-radius", 100);
         String globalPrefix = loader.getConfigManager().getConfig().getString("chat.global-prefix", "!");
 
@@ -37,7 +48,6 @@ public class ChatEngine {
         String formatPath = "formats.local";
         String finalMessage = originalMessage;
 
-        // 1. Проверяем локал / глобал
         if (localRadius == -1) {
             isGlobal = true;
             formatPath = "formats.global";
@@ -49,10 +59,40 @@ public class ChatEngine {
             if (finalMessage.isEmpty()) return;
         }
 
-        // 2. Достаем формат из конфига
         String format = loader.getConfigManager().getMessages().getString(formatPath, "<gray>%player_name% <dark_gray>» <white><message>");
+        dispatchMessage(sender, originalMessage, finalMessage, format, isGlobal, localRadius, "[Chat]");
+    }
 
-        // 3. Интерактивный никнейм игрока
+    /**
+     * Обработка отправки сообщения в тематический канал
+     */
+    private void handleChannelMessage(Player sender, ChatChannel channel, String rawMessage) {
+        // Проверка прав на канал
+        if (channel.getPermission() != null && !channel.getPermission().isEmpty()) {
+            if (!sender.hasPermission(channel.getPermission())) {
+                String noPermMsg = loader.getConfigManager().getMessages().getString(
+                        "channels.no-permission",
+                        "<red>У вас нет доступа к этому каналу чата!"
+                );
+                sender.sendMessage(ColorUtils.colorize(noPermMsg));
+                return;
+            }
+        }
+
+        String messageContent = channel.extractMessage(rawMessage);
+        if (messageContent.isEmpty()) {
+            return;
+        }
+
+        boolean isGlobal = (channel.getRadius() <= 0);
+        dispatchMessage(sender, rawMessage, messageContent, channel.getFormat(), isGlobal, channel.getRadius(), "[" + channel.getId() + "]");
+    }
+
+    /**
+     * Универсальная рассылка, форматирование MiniMessage, Hover-кнопки и проверка игноров
+     */
+    private void dispatchMessage(Player sender, String originalRaw, String textToSend, String formatTemplate, boolean isGlobal, int radius, String logPrefix) {
+        // Интерактивный ник
         String hoverText = loader.getConfigManager().getMessages().getString(
                 "formats.chat-hover",
                 "<gray>Нажмите, чтобы написать в ЛС"
@@ -62,21 +102,21 @@ public class ChatEngine {
                 sender.getName() +
                 "</hover></click>";
 
-        format = format.replace("%player_name%", interactiveName);
+        String format = formatTemplate.replace("%player_name%", interactiveName);
 
-        // 4. PlaceholderAPI
+        // PlaceholderAPI
         if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             format = PlaceholderAPI.setPlaceholders(sender, format);
         }
 
-        // 5. Обработка упоминаний (передаем отправителя для детектора AFK)
+        // Упоминания
         if (loader.getMentionManager() != null) {
-            finalMessage = loader.getMentionManager().processMentions(sender, finalMessage);
+            textToSend = loader.getMentionManager().processMentions(sender, textToSend);
         }
 
-        format = format.replace("<message>", finalMessage);
+        format = format.replace("<message>", textToSend).replace("%message%", textToSend);
 
-        // 6. Подготовка сообщений: для обычных игроков и для админов (с кнопками модерации)
+        // Формирование MiniMessage
         Component parsedComponent = miniMessage.deserialize(format);
         String readyMessage = legacySerializer.serialize(parsedComponent);
 
@@ -88,11 +128,10 @@ public class ChatEngine {
             staffReadyMessage = legacySerializer.serialize(staffComponent);
         }
 
-        // 7. Рассылка сообщений
+        // Рассылка
         if (isGlobal) {
             for (Player p : Bukkit.getOnlinePlayers()) {
                 if (p.equals(sender) || !loader.getIgnoreManager().isIgnored(p.getUniqueId(), sender.getUniqueId())) {
-                    // Админам шлем строку с кнопками
                     if (hoverEnabled && p.hasPermission("chatmt.admin.hover") && !p.equals(sender)) {
                         p.sendMessage(staffReadyMessage);
                     } else {
@@ -100,11 +139,11 @@ public class ChatEngine {
                     }
                 }
             }
-            Bukkit.getConsoleSender().sendMessage("[Global] " + readyMessage);
+            Bukkit.getConsoleSender().sendMessage(logPrefix + " " + readyMessage);
         } else {
             int receiversCount = 0;
             for (Player p : sender.getWorld().getPlayers()) {
-                if (p.getLocation().distance(sender.getLocation()) <= localRadius) {
+                if (p.getLocation().distance(sender.getLocation()) <= radius) {
                     if (p.equals(sender) || !loader.getIgnoreManager().isIgnored(p.getUniqueId(), sender.getUniqueId())) {
                         if (hoverEnabled && p.hasPermission("chatmt.admin.hover") && !p.equals(sender)) {
                             p.sendMessage(staffReadyMessage);
@@ -116,9 +155,10 @@ public class ChatEngine {
                 }
             }
 
-            Bukkit.getConsoleSender().sendMessage("[Local] " + readyMessage);
+            Bukkit.getConsoleSender().sendMessage(logPrefix + " [Local] " + readyMessage);
 
             if (receiversCount == 1) {
+                String globalPrefix = loader.getConfigManager().getConfig().getString("chat.global-prefix", "!");
                 String nobodyMsg = loader.getConfigManager().getMessages().getString(
                         "system.nobody-heard",
                         "<gray>[<red>!<gray>] <red>Вас никто не услышал... Напишите <yellow>%prefix% <red>перед сообщением для глобального чата."
@@ -128,28 +168,16 @@ public class ChatEngine {
             }
         }
 
-        // 8. Логирование
+        // Логгер
         if (loader.getLoggerMT() != null) {
-            loader.getLoggerMT().logChat(sender.getName(), originalMessage, isGlobal);
+            loader.getLoggerMT().logChat(sender.getName(), originalRaw, isGlobal);
         }
     }
 
-    /**
-     * Создает кликабельные кнопки [М] [В] [К] для админов
-     */
     private String getHoverModeration(String targetName) {
-        String muteHover = loader.getConfigManager().getMessages().getString(
-                "punishments.hover-mute",
-                "<red>Нажмите, чтобы выдать мут"
-        );
-        String warnHover = loader.getConfigManager().getMessages().getString(
-                "punishments.hover-warn",
-                "<yellow>Нажмите, чтобы выдать варн"
-        );
-        String kickHover = loader.getConfigManager().getMessages().getString(
-                "punishments.hover-kick",
-                "<dark_red>Нажмите, чтобы кикнуть"
-        );
+        String muteHover = loader.getConfigManager().getMessages().getString("punishments.hover-mute", "<red>Нажмите, чтобы выдать мут");
+        String warnHover = loader.getConfigManager().getMessages().getString("punishments.hover-warn", "<yellow>Нажмите, чтобы выдать варн");
+        String kickHover = loader.getConfigManager().getMessages().getString("punishments.hover-kick", "<dark_red>Нажмите, чтобы кикнуть");
 
         String muteBtn = "<click:suggest_command:'/mute " + targetName + " 1h '><hover:show_text:'" + muteHover + "'><dark_gray>[<red>М<dark_gray>]</hover></click>";
         String warnBtn = "<click:suggest_command:'/warn " + targetName + " '><hover:show_text:'" + warnHover + "'><dark_gray>[<yellow>В<dark_gray>]</hover></click>";

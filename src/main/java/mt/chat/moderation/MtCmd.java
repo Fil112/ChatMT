@@ -34,7 +34,8 @@ public class MtCmd implements CommandExecutor, TabCompleter {
             }
 
             loader.getConfigManager().reload();
-            loader.getAutoBroadcaster().start(); // Перезапуск таймера автосообщений
+            loader.getAutoBroadcaster().start();
+            loader.getChannelManager().loadChannels();
 
             sender.sendMessage(ColorUtils.colorize(loader.getConfigManager().getMessages().getString("system.reload", "<green>Конфигурация перезагружена!")));
             return true;

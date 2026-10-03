@@ -62,6 +62,42 @@ chat:
     # [EN] Quick moderation buttons [M] [W] [K] before messages for staff
     enabled: true
 
+channels:
+  # [RU] Система тематических веток чата (#торговля, #помощь, #staff)
+  # [EN] Topic chat channels system (#trade, #help, #staff)
+  enabled: true
+  list:
+    trade:
+      # [RU] Основной префикс и алиасы для отправки в канал
+      # [EN] Main prefix and aliases to route message into the channel
+      prefix: "#торговля"
+      aliases:
+        - "#trade"
+        - "#т"
+      format: "<dark_gray>[<gradient:#f6d365:#fda085>Торговля</gradient><dark_gray>] <gray>%player_name% <dark_gray>» <yellow><message>"
+      # [RU] Необходимое право (оставь пустым "", если доступно всем)
+      # [EN] Required permission (leave blank "" for everyone)
+      permission: ""
+      # [RU] Радиус видимости (-1 = весь сервер)
+      # [EN] Visibility radius (-1 = global broadcast)
+      radius: -1
+    help:
+      prefix: "#помощь"
+      aliases:
+        - "#help"
+        - "#п"
+      format: "<dark_gray>[<gradient:#4facfe:#00f2fe>Помощь</gradient><dark_gray>] <gray>%player_name% <dark_gray>» <white><message>"
+      permission: ""
+      radius: -1
+    staff:
+      prefix: "#staff"
+      aliases:
+        - "#s"
+        - "#персонал"
+      format: "<dark_gray>[<gradient:#ff0844:#ffb199>Staff</gradient><dark_gray>] <gray>%player_name% <dark_gray>» <red><message>"
+      permission: "chatmt.channel.staff"
+      radius: -1
+
 filters:
   caps:
     enabled: true

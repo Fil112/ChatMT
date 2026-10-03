@@ -27,6 +27,9 @@ system:
   nobody-heard: "<gray>[<red>!<gray>] <red>Nobody heard you... Type <yellow>%prefix% <red>before your message for global chat."
   afk-notice: "<dark_gray>[<yellow>!<dark_gray>] <gray>Player <yellow>%target% <gray>is currently AFK and might not answer immediately."
 
+channels:
+  no-permission: "<red>You do not have permission to use this chat channel!"
+
 punishments:
   default-reason: "Violation of server rules"
   ban-screen: "&c&lYOU ARE BANNED FROM THE SERVER\n\n&7Your account has been suspended.\n&7Ban expires in: &e%time%\n\n&8You can appeal in our Discord!"

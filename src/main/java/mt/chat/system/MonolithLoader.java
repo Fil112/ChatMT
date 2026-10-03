@@ -38,6 +38,7 @@ public class MonolithLoader {
     private ChatEngine chatEngine;
     private AutoBroadcaster autoBroadcaster;
     private ChatGamesManager chatGamesManager;
+    private ChannelManager channelManager;
 
     public MonolithLoader(ChatMT plugin) {
         this.plugin = plugin;
@@ -84,6 +85,9 @@ public class MonolithLoader {
         plugin.getLogger().info(" -> Запуск модуля чат-игр...");
         this.chatGamesManager = new ChatGamesManager(this);
         this.chatGamesManager.start();
+
+        plugin.getLogger().info(" -> Подключение системы каналов чата...");
+        this.channelManager = new ChannelManager(this);
 
         plugin.getLogger().info(" -> Регистрация слушателей и команд...");
         registerListeners();
@@ -204,4 +208,6 @@ public class MonolithLoader {
     }
 
     public ChatGamesManager getChatGamesManager() { return chatGamesManager; }
+
+    public ChannelManager getChannelManager() { return channelManager; }
 }
